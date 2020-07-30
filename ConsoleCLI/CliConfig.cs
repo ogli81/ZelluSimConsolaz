@@ -43,6 +43,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected ConsoleColor runningColor = ConsoleColor.DarkGreen;
         protected ConsoleColor stoppedColor = ConsoleColor.DarkRed;
         protected int delayMilliSeconds = 50;
+        protected ConsoleColor feedbackColorOkay = ConsoleColor.Gray;
+        protected ConsoleColor feedbackColorError = ConsoleColor.Red;
 
         //protected string generationText = "generation: {0,0.0}";
         protected string generationText = "generation: {0:0,0}";
@@ -287,7 +289,24 @@ namespace ZelluSimConsolaz.ConsoleCLI
         {
             get => promptColor;
             set { promptColor = value; TryRerender(); }
+        }
 
+        /// <summary>
+        /// We use this color for feedback messages when everything is fine.
+        /// </summary>
+        public ConsoleColor FeedbackColorOkay
+        {
+            get => feedbackColorOkay;
+            set { feedbackColorOkay = value; TryRerender(); }
+        }
+
+        /// <summary>
+        /// We use this color for feedback messages when we have an error / wrong command.
+        /// </summary>
+        public ConsoleColor FeedbackColorError
+        {
+            get => feedbackColorError;
+            set { feedbackColorError = value; TryRerender(); }
         }
 
         /// <summary>

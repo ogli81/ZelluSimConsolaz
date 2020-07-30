@@ -12,6 +12,7 @@ namespace ZelluSimConsolaz
         protected ICellSimulation sim;
         protected CliConfig conf;
         protected string command;
+        protected string feedback = "";
         protected Random rand = new Random();
         protected bool running = false;
         protected char[] sep = { ' ', '\t', ',' };
@@ -204,6 +205,40 @@ namespace ZelluSimConsolaz
                 if (command.Equals("next"))
                 {
                     sim.CalculateNextGen();
+                }
+                else
+                if (command.Equals("oldest?"))
+                {
+                    feedback = "" + sim.OldestGen;
+                }
+                else
+                if (command.Equals("oldest"))
+                {
+                    sim.GoToOldestGen();
+                }
+                else
+                if (command.Equals("back"))
+                {
+                    sim.GoBackOneGen();
+                }
+                else
+                if (command.Equals("zero"))
+                {
+                    sim.RelabelCurrentAsZero();
+                }
+                else
+                if (command.StartsWith("go to"))
+                {
+                    string[] split = command.Split(sep);
+                    if (split.Length > 2)
+                    {
+                        int n;
+                        bool success = int.TryParse(split[2], out n);
+                        if (success && n >= 0)
+                        {
+                            sim.GoToGen(n);
+                        }
+                    }
                 }
 
                 Rerender();
