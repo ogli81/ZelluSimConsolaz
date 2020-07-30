@@ -28,10 +28,10 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected int cellSize = 23;
         protected int topLeftX = 3;
-        protected int topLeftY = 25;
+        protected int topLeftY = 2;
 
         protected string alifeText = "X";
-        protected string deadText = "";
+        protected string deadText = "-";
         protected string halfAlifeText = "+";
         protected ConsoleColor alifeColor = ConsoleColor.Green;
         protected ConsoleColor deadColor = ConsoleColor.Red;
@@ -42,33 +42,30 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected string stoppedText = "STOPPED";
         protected ConsoleColor runningColor = ConsoleColor.DarkGreen;
         protected ConsoleColor stoppedColor = ConsoleColor.DarkRed;
+        protected int delayMilliSeconds = 50;
 
-        protected string generationText = "generation: {0,0.0}";
+        //protected string generationText = "generation: {0,0.0}";
+        protected string generationText = "generation: {0:0,0}";
         protected CultureInfo generationTextCulture = CultureInfo.InvariantCulture;
         protected ConsoleColor generationTextColor = ConsoleColor.DarkBlue;
+
+        protected string promptText = "> ";
+        protected ConsoleColor promptColor = ConsoleColor.White;
+
+        protected ConsoleColor backColor = ConsoleColor.Black;
 
 
         //c'tors:
 
         /// <summary>
-        /// The c'tor variant 1: The GuiConfig is not connected (the Form is null). 
-        /// As soon as you set the Form (property 'Form') the GuiConfig will try to 
-        /// connect with the Form.
+        /// The GuiConfig is not connected (the App is null). As soon as you set the 
+        /// app (<see cref="CliConfig.App"/>) the GuiConfig will try to connect with 
+        /// the app.
         /// </summary>
         public CliConfig()
         {
 
         }
-
-        /// <summary>
-        /// The c'tor variant 2: Connects the form right now and tries to rebuild the UI.
-        /// </summary>
-        /// <param name="app">The Form that you want to connect to.</param>
-        public CliConfig(ConsoleApp app)
-        {
-            Ctor1Action(app);
-        }
-        protected void Ctor1Action(ConsoleApp app) { App = app; }
 
 
         //helper methods:
@@ -235,6 +232,16 @@ namespace ZelluSimConsolaz.ConsoleCLI
         }
 
         /// <summary>
+        /// The delay between frames of the automatic calculation. 
+        /// Can be zero.
+        /// </summary>
+        public int DelayMilliSeconds
+        {
+            get => delayMilliSeconds;
+            set { delayMilliSeconds = value < 0 ? 0 : value; TryRerender(); }
+        }
+
+        /// <summary>
         /// This formatting string will be used to display the information "which generation do we currently have?". 
         /// The string will be used with 'String.Format()'. It is expected to receive one value of type integer.
         /// </summary>
@@ -263,5 +270,35 @@ namespace ZelluSimConsolaz.ConsoleCLI
             get => generationTextColor;
             set { generationTextColor = value; TryRerender(); }
         }
+
+        /// <summary>
+        /// We display this text at the start of a line.
+        /// </summary>
+        public string PromptText
+        {
+            get => promptText;
+            set { promptText = value; TryRerender(); }
+        }
+
+        /// <summary>
+        /// We use this color for the prompt.
+        /// </summary>
+        public ConsoleColor PromptColor
+        {
+            get => promptColor;
+            set { promptColor = value; TryRerender(); }
+
+        }
+
+        /// <summary>
+        /// This is the background color of our console.
+        /// </summary>
+        public ConsoleColor BackColor
+        {
+            get => backColor;
+            set { backColor = value; TryRerender(); }
+        }
+        //TODO: background-color for everything
+        //TODO: color for command (that the user is currently typing in after the prompt)
     }
 }

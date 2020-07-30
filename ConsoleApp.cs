@@ -3,6 +3,7 @@ using ZelluSim.SimulationTypes;
 using ZelluSimConsolaz.ConsoleCLI;
 using System.Windows.Input;
 using System.Windows;
+using System.Threading;
 
 namespace ZelluSimConsolaz
 {
@@ -17,8 +18,12 @@ namespace ZelluSimConsolaz
 
         public void Rerender()
         {
+            Console.BackgroundColor = conf.BackColor;
+            Console.Clear();
+
             for (int i = 0; i < conf.TopLeftY; ++i)
                 Console.WriteLine();
+
             decimal val;
             for (int y = 0; y < sim.Settings.SizeY; ++y)
             {
@@ -44,12 +49,18 @@ namespace ZelluSimConsolaz
                         Console.Write(conf.HalfAlifeText);
                     }
                 }
+                Console.WriteLine();
             }
+            Console.ForegroundColor = conf.GenerationTextColor;
+            //Console.WriteLine(conf.GenerationText, sim.CurrentGen.ToString(conf.GenerationTextCulture));
+            Console.WriteLine(String.Format(conf.GenerationTextCulture, conf.GenerationText, sim.CurrentGen));
         }
 
         public void AutoSimLoop()
         {
             running = true;
+            bool vis = Console.CursorVisible;
+            Console.CursorVisible = false;
             do
             {
                 sim.CalculateNextGen();
@@ -57,9 +68,13 @@ namespace ZelluSimConsolaz
                 Console.ForegroundColor = conf.RunningColor;
                 Console.WriteLine();
                 Console.WriteLine(conf.RunningText);
+
+                if(conf.DelayMilliSeconds > 0)
+                    Thread.Sleep(conf.DelayMilliSeconds);
             }
             while(!Keyboard.IsKeyDown(Key.Escape));
             running = false;
+            Console.CursorVisible = vis;
         }
 
         public void FillWith(decimal val)
@@ -76,17 +91,51 @@ namespace ZelluSimConsolaz
                     sim.SetCellValue(x, y, rand.Next(2) == 1 ? 1m : 0m);
         }
 
+        public bool BoundsCheck(int x, int y)
+        {
+            return (x < 0 || x >= sim.Settings.SizeX || y < 0 || y >= sim.Settings.SizeY) ? false : true;
+        }
+
+        public void SetWindowSize()
+        {
+            int paddingX = 4;
+            int paddingY = 4;
+            Console.SetWindowSize(
+                conf.TopLeftX + sim.Settings.SizeX + paddingX, 
+                conf.TopLeftY + sim.Settings.SizeY + paddingY
+                );
+        }
+
         public void MainLoop(string[] args)
         {
             do
             {
+                if (conf == null && sim == null)
+                {
+                    conf = new CliConfig();
+                    sim = new ClassicSimulation(new SimulationSettings());
+                    FillWithRandoms();
+                    conf.App = this;
+                    SetWindowSize();
+                }
+
+                if (conf == null)
+                {
+                    conf = new CliConfig();
+                    conf.App = this;
+                    SetWindowSize();
+                }
+
                 if (sim == null)
                 {
                     sim = new ClassicSimulation(new SimulationSettings());
                     FillWithRandoms();
+                    SetWindowSize();
                 }
 
                 Console.WriteLine();
+                Console.ForegroundColor = conf.PromptColor;
+                Console.Write(conf.PromptText);
                 command = Console.ReadLine();
 
                 if (command.StartsWith("random"))
@@ -103,7 +152,7 @@ namespace ZelluSimConsolaz
                         int newX, newY = -1;
                         bool success = int.TryParse(split[2], out newX);
                         success = success && int.TryParse(split[3], out newY);
-                        if (success)
+                        if (success && newX > 0 && newY > 0)
                         {
                             sim.Settings.SuppressUpdates = true;
                             sim.Settings.SizeX = newX;
@@ -118,12 +167,15 @@ namespace ZelluSimConsolaz
                     int x, y = -1;
                     decimal val = 1m;
                     string[] split = command.Split(sep);
-                    bool success = int.TryParse(split[1], out x);
-                    success = success && int.TryParse(split[2], out y);
-                    if (split.Length > 3)
-                        success = decimal.TryParse(split[3], out val);
-                    if (success)
-                        sim.SetCellValue(x, y, val);
+                    if (split.Length > 2)
+                    {
+                        bool success = int.TryParse(split[1], out x);
+                        success = success && int.TryParse(split[2], out y);
+                        if (split.Length > 3)
+                            success = decimal.TryParse(split[3], out val);
+                        if (success && BoundsCheck(x,y))
+                            sim.SetCellValue(x, y, val);
+                    }
                 }
                 else
                 if (command.Equals("fill"))
@@ -140,10 +192,18 @@ namespace ZelluSimConsolaz
                 {
                     int x, y = -1;
                     string[] split = command.Split(sep);
-                    bool success = int.TryParse(split[2], out x);
-                    success = success && int.TryParse(split[3], out y);
-                    if (success)
-                        sim.SetCellValue(x, y, 0m);
+                    if (split.Length > 2)
+                    {
+                        bool success = int.TryParse(split[1], out x);
+                        success = success && int.TryParse(split[2], out y);
+                        if (success && BoundsCheck(x, y))
+                            sim.SetCellValue(x, y, 0m);
+                    }
+                }
+                else
+                if (command.Equals("next"))
+                {
+                    sim.CalculateNextGen();
                 }
 
                 Rerender();

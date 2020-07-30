@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ namespace ZelluSimConsolaz
 {
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
             ConsoleApp app = new ConsoleApp();
