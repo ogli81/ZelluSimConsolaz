@@ -47,7 +47,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected ConsoleColor feedbackColorError = ConsoleColor.Red;
 
         //protected string generationText = "generation: {0,0.0}";
-        protected string generationText = "generation: {0:0,0}";
+        protected string generationText = "generation: {0:#,0}";
         protected CultureInfo generationTextCulture = CultureInfo.InvariantCulture;
         protected ConsoleColor generationTextColor = ConsoleColor.DarkBlue;
 

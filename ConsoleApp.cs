@@ -7,12 +7,19 @@ using System.Threading;
 
 namespace ZelluSimConsolaz
 {
+    public enum FeedbackType
+    {
+        OKAY,
+        ERROR
+    }
+
     public class ConsoleApp
     {
         protected ICellSimulation sim;
         protected CliConfig conf;
         protected string command;
         protected string feedback = "";
+        protected FeedbackType feedbackType = FeedbackType.OKAY;
         protected Random rand = new Random();
         protected bool running = false;
         protected char[] sep = { ' ', '\t', ',' };
@@ -52,9 +59,17 @@ namespace ZelluSimConsolaz
                 }
                 Console.WriteLine();
             }
+
             Console.ForegroundColor = conf.GenerationTextColor;
             //Console.WriteLine(conf.GenerationText, sim.CurrentGen.ToString(conf.GenerationTextCulture));
             Console.WriteLine(String.Format(conf.GenerationTextCulture, conf.GenerationText, sim.CurrentGen));
+
+            switch (feedbackType)
+            {
+                case FeedbackType.OKAY:  Console.ForegroundColor = conf.FeedbackColorOkay; break;
+                case FeedbackType.ERROR: Console.ForegroundColor = conf.FeedbackColorError; break;
+            }
+            Console.WriteLine(feedback);
         }
 
         public void AutoSimLoop()
@@ -94,7 +109,7 @@ namespace ZelluSimConsolaz
 
         public bool BoundsCheck(int x, int y)
         {
-            return (x < 0 || x >= sim.Settings.SizeX || y < 0 || y >= sim.Settings.SizeY) ? false : true;
+            return x >= 0 && x < sim.Settings.SizeX && y >= 0 && y < sim.Settings.SizeY;
         }
 
         public void SetWindowSize()
@@ -140,10 +155,18 @@ namespace ZelluSimConsolaz
                 command = Console.ReadLine();
 
                 if (command.StartsWith("random"))
+                {
                     FillWithRandoms();
+                    feedback = "Filled cells with random numbers.";
+                    feedbackType = FeedbackType.OKAY;
+                }
                 else
                 if (command.StartsWith("run"))
+                {
                     AutoSimLoop();
+                    feedback = "Started automatic run of simulations.";
+                    feedbackType = FeedbackType.OKAY;
+                }
                 else
                 if (command.StartsWith("set size"))
                 {
@@ -159,6 +182,13 @@ namespace ZelluSimConsolaz
                             sim.Settings.SizeX = newX;
                             sim.Settings.SizeY = newY;
                             sim.Settings.SuppressUpdates = false;
+                            feedback = "Set x and y to desired values.";
+                            feedbackType = FeedbackType.OKAY;
+                        }
+                        else
+                        {
+                            feedback = "Could not set to new size.";
+                            feedbackType = FeedbackType.ERROR;
                         }
                     }
                 }
@@ -174,19 +204,32 @@ namespace ZelluSimConsolaz
                         success = success && int.TryParse(split[2], out y);
                         if (split.Length > 3)
                             success = decimal.TryParse(split[3], out val);
-                        if (success && BoundsCheck(x,y))
+                        if (success && BoundsCheck(x, y))
+                        {
                             sim.SetCellValue(x, y, val);
+                            feedback = "Set value for cell.";
+                            feedbackType = FeedbackType.OKAY;
+                        }
+                        else
+                        {
+                            feedback = "Could not set to new value.";
+                            feedbackType = FeedbackType.ERROR;
+                        }
                     }
                 }
                 else
                 if (command.Equals("fill"))
                 {
                     FillWith(1m);
+                    feedback = "Set every cell to 1 (100%).";
+                    feedbackType = FeedbackType.OKAY;
                 }
                 else
                 if (command.Equals("clear"))
                 {
                     FillWith(0m);
+                    feedback = "Set every cell to 0 (0%).";
+                    feedbackType = FeedbackType.OKAY;
                 }
                 else
                 if (command.StartsWith("clear"))
@@ -198,33 +241,51 @@ namespace ZelluSimConsolaz
                         bool success = int.TryParse(split[1], out x);
                         success = success && int.TryParse(split[2], out y);
                         if (success && BoundsCheck(x, y))
+                        {
                             sim.SetCellValue(x, y, 0m);
+                            feedback = "Set cell value to 0 (0%).";
+                            feedbackType = FeedbackType.OKAY;
+                        }
+                        else
+                        {
+                            feedback = "Could not set cell value to 0 (0%).";
+                            feedbackType = FeedbackType.ERROR;
+                        }
                     }
                 }
                 else
                 if (command.Equals("next"))
                 {
                     sim.CalculateNextGen();
+                    feedback = "Calculated next generation.";
+                    feedbackType = FeedbackType.OKAY;
                 }
                 else
                 if (command.Equals("oldest?"))
                 {
-                    feedback = "" + sim.OldestGen;
+                    feedback = "Oldest generation is " + sim.OldestGen + ".";
+                    feedbackType = FeedbackType.OKAY;
                 }
                 else
                 if (command.Equals("oldest"))
                 {
                     sim.GoToOldestGen();
+                    feedback = "Went to oldest generation.";
+                    feedbackType = FeedbackType.OKAY;
                 }
                 else
                 if (command.Equals("back"))
                 {
                     sim.GoBackOneGen();
+                    feedback = "Went back one generation.";
+                    feedbackType = FeedbackType.OKAY;
                 }
                 else
                 if (command.Equals("zero"))
                 {
                     sim.RelabelCurrentAsZero();
+                    feedback = "Relabled current generation as zero, deleted others.";
+                    feedbackType = FeedbackType.OKAY;
                 }
                 else
                 if (command.StartsWith("go to"))
@@ -236,9 +297,29 @@ namespace ZelluSimConsolaz
                         bool success = int.TryParse(split[2], out n);
                         if (success && n >= 0)
                         {
-                            sim.GoToGen(n);
+                            bool okay = sim.GoToGen(n);
+                            if (okay)
+                            {
+                                feedback = "Went to generation " + n + ".";
+                                feedbackType = FeedbackType.OKAY;
+                            }
+                            else
+                            {
+                                feedback = "Tried to go to generation " + n + " but failed.";
+                                feedbackType = FeedbackType.ERROR;
+                            }
+                        }
+                        else
+                        {
+                            feedback = "Could not go to that generation.";
+                            feedbackType = FeedbackType.ERROR;
                         }
                     }
+                }
+                else
+                {
+                    feedback = "Unknown command: \"" + command + "\"";
+                    feedbackType = FeedbackType.ERROR;
                 }
 
                 Rerender();
