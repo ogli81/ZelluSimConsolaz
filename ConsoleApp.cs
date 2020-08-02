@@ -41,7 +41,7 @@ namespace ZelluSimConsolaz
             {
                 if (conf == null && sim == null)
                 {
-                    conf = new CliConfig();
+                    conf = CreateCliConfig();
                     sim = CreateCellSimulation();
                     FillWithRandoms();
                     conf.App = this;
@@ -50,7 +50,7 @@ namespace ZelluSimConsolaz
 
                 if (conf == null)
                 {
-                    conf = new CliConfig();
+                    conf = CreateCliConfig();
                     conf.App = this;
                     SetWindowSize();
                 }
@@ -304,8 +304,15 @@ namespace ZelluSimConsolaz
             decimal val;
             for (int y = 0; y < sim.Settings.SizeY; ++y)
             {
+                //Console.BackgroundColor = conf.BackColor; (flickers too much => need double buffering / batch-flush)
+                //---> https://github.com/microsoftarchive/msdn-code-gallery-community-a-c/tree/master/C%23%20Console%20Double%20Buffer
+
                 for (int j = 0; j < conf.TopLeftX; ++j)
                     Console.Write(" ");
+
+                //Console.BackgroundColor = ConsoleColor.Yellow; (flickers too much => need double buffering / batch-flush)
+                //---> https://github.com/microsoftarchive/msdn-code-gallery-community-a-c/tree/master/C%23%20Console%20Double%20Buffer
+
                 for (int x = 0; x < sim.Settings.SizeX; ++x)
                 {
                     val = sim.GetCellValue(x, y);
@@ -329,9 +336,12 @@ namespace ZelluSimConsolaz
                 Console.WriteLine();
             }
 
+            //Console.BackgroundColor = conf.BackColor; (flickers too much => need double buffering / batch-flush)
+            //---> https://github.com/microsoftarchive/msdn-code-gallery-community-a-c/tree/master/C%23%20Console%20Double%20Buffer
+
             Console.ForegroundColor = conf.GenerationTextColor;
             //Console.WriteLine(conf.GenerationText, sim.CurrentGen.ToString(conf.GenerationTextCulture));
-            Console.WriteLine(String.Format(conf.GenerationTextCulture, conf.GenerationText, sim.CurrentGen));
+            Console.WriteLine(string.Format(conf.GenerationTextCulture, conf.GenerationText, sim.CurrentGen));
 
             switch (feedbackType)
             {
@@ -427,6 +437,13 @@ namespace ZelluSimConsolaz
                 conf.TopLeftX + sim.Settings.SizeX + paddingX, 
                 conf.TopLeftY + sim.Settings.SizeY + paddingY
                 );
+        }
+
+        public CliConfig CreateCliConfig()
+        {
+            CliConfig config = new CliConfig();
+            config.DelayMilliSeconds = 20;
+            return config;
         }
 
         public ICellSimulation CreateCellSimulation()

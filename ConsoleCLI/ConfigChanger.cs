@@ -52,12 +52,43 @@ namespace ZelluSimConsolaz.ConsoleCLI
             Console.ForegroundColor = fore;
             Console.Clear();
             for(int i = 0; i < conf.NumItems; ++i)
-                RenderWord(conf.GetItem(i).Name, i);
+                RenderWord(conf.GetItem(i), i);
         }
 
-        protected void RenderWord(string word, int index)
+        protected void RenderWord(Item it, int index)
         {
-            Console.WriteLine((index == item ? "[" : " ") + word + (index == item ? "]" : " "));
+            string word = it.Name;
+            Console.ForegroundColor = fore;
+            Console.Write((index == item ? "[" : " ") + word + (index == item ? "]" : " "));
+            Console.ForegroundColor = info;
+            Console.WriteLine(" " + it.Info);
+        }
+
+        protected void RenderList2(int item)
+        {
+            Console.BackgroundColor = back;
+            Console.Clear();
+            int longest = 0;
+            for (int i = 0; i < ColorInfo.NumColors; ++i)
+                longest = Math.Max(longest, ColorInfo.GetColorName(i).Length);
+            for (int i = 0; i < ColorInfo.NumColors; ++i)
+                RenderWord2(i, item, longest);
+        }
+
+        protected void RenderWord2(int index, int item, int longestName)
+        {
+            Console.BackgroundColor = back;
+            Console.ForegroundColor = fore;
+            string word = ColorInfo.GetColorName(index);
+            Console.ForegroundColor = fore;
+            Console.Write((index == item ? "[" : " ") + word + (index == item ? "]" : " "));
+            string arrow = "";
+            arrow = arrow.PadRight(longestName - word.Length, '-');
+            arrow += "->";
+            Console.Write(arrow);
+            Console.BackgroundColor = ColorInfo.GetColor(index);
+            Console.ForegroundColor = ColorInfo.IsDarkColor(index) ? ConsoleColor.White : ConsoleColor.Black;
+            Console.WriteLine("  (color looks like this)  ");
         }
 
         protected void ConfigureItem(Item item)
@@ -116,16 +147,51 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected ConsoleColor UserEntersColor(Item item)
         {
-            //TODO
-            return ConsoleColor.White;
+            ConsoleColor originalColor = GetColorFromConfig(item);
+
+            int item2 = -1;
+            ConsoleColor aColor;
+            do
+            {
+                item2++;
+                aColor = ColorInfo.GetColor(item2);
+            }
+            while (!aColor.Equals(originalColor));
+
+            ConsoleKeyInfo key;
+            do
+            {
+                RenderList2(item2);
+                key = Console.ReadKey();
+                if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.PageUp || key.Key == ConsoleKey.LeftArrow)
+                    item2 = item2 == 0 ? ColorInfo.NumColors - 1 : item2 - 1;
+                else
+                if (key.Key == ConsoleKey.DownArrow || key.Key == ConsoleKey.PageDown || key.Key == ConsoleKey.RightArrow)
+                    item2 = (item2 + 1) % ColorInfo.NumColors;
+                else
+                if (key.Key == ConsoleKey.Enter)
+                    return ColorInfo.GetColor(item2);
+                else
+                if (key.Key == ConsoleKey.Escape)
+                    return originalColor;
+            }
+            while (true);
         }
 
         protected CultureInfo UserEntersCulture(Item item)
         {
-            //TODO
+            //ConsoleKeyInfo key;
+            //String str = "";
+            //do
+            //{
+            //    key = Console.ReadKey();
+            //    if (key.Key == ConsoleKey.Backspace)
+            //        str = str.Length == 0 ? str : str.Substring(0, str.Length - 1);
+            //    else
+            //    if (key.Key == )
+            //}
             return CultureInfo.InvariantCulture;
         }
-
 
         protected FieldInfo GetField(string name) => typeof(CliConfig).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);
 

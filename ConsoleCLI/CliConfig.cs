@@ -17,7 +17,6 @@ namespace ZelluSimConsolaz.ConsoleCLI
     /// </summary>
     public class CliConfig
     {
-
         //state:
 
         protected bool reformatNeeded = false;
