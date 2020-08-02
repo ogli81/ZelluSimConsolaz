@@ -115,7 +115,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
             if (type == typeof(CultureInfo))
             {
                 CultureInfo input = UserEntersCulture(item);
-                SetItemToConfig(item, input);
+                if(input != null)
+                    SetItemToConfig(item, input);
             }
             else
                 throw new NotImplementedException("can't handle type (yet): " + type);
@@ -180,17 +181,100 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected CultureInfo UserEntersCulture(Item item)
         {
-            //ConsoleKeyInfo key;
-            //String str = "";
-            //do
-            //{
-            //    key = Console.ReadKey();
-            //    if (key.Key == ConsoleKey.Backspace)
-            //        str = str.Length == 0 ? str : str.Substring(0, str.Length - 1);
-            //    else
-            //    if (key.Key == )
-            //}
-            return CultureInfo.InvariantCulture;
+            ConsoleKeyInfo key;
+            String str = "";
+            List<CultureInfo> cul = new List<CultureInfo>();
+            CultureInfo[] all = CultureInfo.GetCultures(CultureTypes.AllCultures);
+            int sel = -1;
+
+            Console.Clear();
+            Console.ForegroundColor = conf.HelpColor;
+            Console.WriteLine("Chose your language/format - use these keys:");
+            Console.WriteLine("[ESC] = abort anytime (doesn't change the format)");
+            Console.WriteLine("[ENTER] = select this language (only if valid)");
+            Console.WriteLine("[TAB] = extend to match the next fitting language");
+            Console.WriteLine("[Up]/[Left]/[PageUp] = cycle to previous language");
+            Console.WriteLine("[Down]/[Right]/[PageDown] = cycle to next language");
+            Console.WriteLine("[BackSpace] = delete the last character");
+            Console.WriteLine("[A]..[Z] (and others) = enter a new character");
+            Console.WriteLine();
+
+            do
+            {
+                //Console.Clear(); <--- this is problematic, because if [UpArrow] or [LeftArrow] is pressed, we see nothing...
+                //---> the double-buffered console might solve this problem
+
+                Console.ForegroundColor = conf.PromptColor;
+                Console.Write(conf.PromptText);
+                Console.ForegroundColor = sel < 0 ? conf.FeedbackColorError : conf.FeedbackColorOkay;
+                Console.Write(str);
+                Console.ForegroundColor = conf.PromptColor;
+                
+                cul.Clear();
+                foreach (CultureInfo ci in all)
+                    if (ci.DisplayName.ToLower().StartsWith(str.ToLower()))
+                        cul.Add(ci);
+
+                key = Console.ReadKey();
+                if (key.Key == ConsoleKey.Backspace)
+                {
+                    str = str.Length == 0 ? str : str.Substring(0, str.Length - 1);
+                    sel = Array.FindIndex(all, (e) => e.DisplayName.ToLower().Equals(str.ToLower()));
+                }
+                else
+                if (key.Key == ConsoleKey.Tab && cul.Count > 0)
+                {
+                    str = cul[0].DisplayName;
+                    sel = Array.FindIndex(all, (e) => e.DisplayName.ToLower().Equals(str.ToLower()));
+                }
+                else
+                if (key.Key == ConsoleKey.Enter && sel >= 0)
+                {
+                    return all[sel];
+                }
+                else
+                if (key.Key == ConsoleKey.DownArrow || key.Key == ConsoleKey.RightArrow || key.Key == ConsoleKey.PageDown)
+                {
+                    if (sel < 0)
+                    {
+                        sel = 0;
+                    }
+                    else
+                    {
+                        sel++;
+                        if (sel >= all.Length)
+                            sel = 0;
+                        str = all[sel].DisplayName;
+                    }
+                }
+                else
+                if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.LeftArrow || key.Key == ConsoleKey.PageUp)
+                {
+                    if (sel < 0)
+                    {
+                        sel = all.Length - 1;
+                    }
+                    else
+                    {
+                        sel--;
+                        if (sel == -1)
+                            sel = all.Length - 1;
+                        str = all[sel].DisplayName;
+                    }
+                }
+                else
+                if (key.Key == ConsoleKey.Escape)
+                {
+                    return null;
+                }
+                else
+                {
+                    str += key.KeyChar;
+                    sel = Array.FindIndex(all, (e) => e.DisplayName.ToLower().Equals(str.ToLower()));
+                }
+                Console.WriteLine();
+            }
+            while (true);
         }
 
         protected FieldInfo GetField(string name) => typeof(CliConfig).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);

@@ -72,6 +72,8 @@ namespace ZelluSimConsolaz
                     ConfigChanger changer = new ConfigChanger(conf);
                     changer.MainLoop();
                     SetWindowSize();
+                    feedback = "Left Configuration management.";
+                    feedbackType = FeedbackType.OKAY;
                 }
                 else
                 if (command.StartsWith("settings"))

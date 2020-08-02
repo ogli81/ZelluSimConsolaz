@@ -41,7 +41,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected ConsoleColor runningColor = ConsoleColor.DarkGreen;
         protected ConsoleColor stoppedColor = ConsoleColor.DarkRed;
         protected int delayMilliSeconds = 50;
-        protected ConsoleColor feedbackColorOkay = ConsoleColor.Gray;
+        protected ConsoleColor feedbackColorOkay = ConsoleColor.Green;
         protected ConsoleColor feedbackColorError = ConsoleColor.Red;
 
         //protected string generationText = "generation: {0,0.0}";
@@ -52,7 +52,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected string promptText = "> ";
         protected ConsoleColor promptColor = ConsoleColor.White;
 
-        protected ConsoleColor helpColor = ConsoleColor.White;
+        protected ConsoleColor helpColor = ConsoleColor.Gray;
 
         protected ConsoleColor backColor = ConsoleColor.Black;
 
