@@ -49,10 +49,12 @@ namespace ZelluSimConsolaz.ConsoleCLI
         //protected string generationText = "generation: {0,0.0}";
         protected string generationText = "generation: {0:#,0}";
         protected CultureInfo generationTextCulture = CultureInfo.InvariantCulture;
-        protected ConsoleColor generationTextColor = ConsoleColor.DarkBlue;
+        protected ConsoleColor generationTextColor = ConsoleColor.Blue;
 
         protected string promptText = "> ";
         protected ConsoleColor promptColor = ConsoleColor.White;
+
+        protected ConsoleColor helpColor = ConsoleColor.White;
 
         protected ConsoleColor backColor = ConsoleColor.Black;
 
@@ -307,6 +309,15 @@ namespace ZelluSimConsolaz.ConsoleCLI
         {
             get => feedbackColorError;
             set { feedbackColorError = value; TryRerender(); }
+        }
+
+        /// <summary>
+        /// We use this color to display our help (command 'help' or '?').
+        /// </summary>
+        public ConsoleColor HelpColor
+        {
+            get => helpColor;
+            set { helpColor = value; TryRerender(); }
         }
 
         /// <summary>

@@ -4,6 +4,7 @@ using ZelluSimConsolaz.ConsoleCLI;
 using System.Windows.Input;
 using System.Windows;
 using System.Threading;
+using ZelluSim.Misc;
 
 namespace ZelluSimConsolaz
 {
@@ -13,8 +14,10 @@ namespace ZelluSimConsolaz
         ERROR
     }
 
-    public class ConsoleApp
+    public class ConsoleApp : IInterruptRequester
     {
+        //state:
+
         protected ICellSimulation sim;
         protected CliConfig conf;
         protected string command;
@@ -24,103 +27,13 @@ namespace ZelluSimConsolaz
         protected bool running = false;
         protected char[] sep = { ' ', '\t', ',' };
 
-        public void Rerender()
-        {
-            Console.BackgroundColor = conf.BackColor;
-            Console.Clear();
 
-            for (int i = 0; i < conf.TopLeftY; ++i)
-                Console.WriteLine();
+        //c'tors:
 
-            decimal val;
-            for (int y = 0; y < sim.Settings.SizeY; ++y)
-            {
-                for (int j = 0; j < conf.TopLeftX; ++j)
-                    Console.Write(" ");
-                for (int x = 0; x < sim.Settings.SizeX; ++x)
-                {
-                    val = sim.GetCellValue(x, y);
-                    if (val <= 0m)
-                    {
-                        Console.ForegroundColor = conf.DeadColor;
-                        Console.Write(conf.DeadText);
-                    }
-                    else
-                    if (val >= 1m)
-                    {
-                        Console.ForegroundColor = conf.AlifeColor;
-                        Console.Write(conf.AlifeText);
-                    }
-                    else
-                    {
-                        Console.ForegroundColor = conf.HalfAlifeColor;
-                        Console.Write(conf.HalfAlifeText);
-                    }
-                }
-                Console.WriteLine();
-            }
+        //-
 
-            Console.ForegroundColor = conf.GenerationTextColor;
-            //Console.WriteLine(conf.GenerationText, sim.CurrentGen.ToString(conf.GenerationTextCulture));
-            Console.WriteLine(String.Format(conf.GenerationTextCulture, conf.GenerationText, sim.CurrentGen));
 
-            switch (feedbackType)
-            {
-                case FeedbackType.OKAY:  Console.ForegroundColor = conf.FeedbackColorOkay; break;
-                case FeedbackType.ERROR: Console.ForegroundColor = conf.FeedbackColorError; break;
-            }
-            Console.WriteLine(feedback);
-        }
-
-        public void AutoSimLoop()
-        {
-            running = true;
-            bool vis = Console.CursorVisible;
-            Console.CursorVisible = false;
-            do
-            {
-                sim.CalculateNextGen();
-                Rerender();
-                Console.ForegroundColor = conf.RunningColor;
-                Console.WriteLine();
-                Console.WriteLine(conf.RunningText);
-
-                if(conf.DelayMilliSeconds > 0)
-                    Thread.Sleep(conf.DelayMilliSeconds);
-            }
-            while(!Keyboard.IsKeyDown(Key.Escape));
-            running = false;
-            Console.CursorVisible = vis;
-        }
-
-        public void FillWith(decimal val)
-        {
-            for (int x = 0; x < sim.Settings.SizeX; ++x)
-                for (int y = 0; y < sim.Settings.SizeY; ++y)
-                    sim.SetCellValue(x, y, val);
-        }
-
-        public void FillWithRandoms()
-        {
-            for (int x = 0; x < sim.Settings.SizeX; ++x)
-                for (int y = 0; y < sim.Settings.SizeY; ++y)
-                    sim.SetCellValue(x, y, rand.Next(2) == 1 ? 1m : 0m);
-        }
-
-        public bool BoundsCheck(int x, int y)
-        {
-            return x >= 0 && x < sim.Settings.SizeX && y >= 0 && y < sim.Settings.SizeY;
-        }
-
-        public void SetWindowSize()
-        {
-            int paddingX = 4;
-            int paddingY = 4;
-            Console.SetWindowSize(
-                conf.TopLeftX + sim.Settings.SizeX + paddingX, 
-                conf.TopLeftY + sim.Settings.SizeY + paddingY
-                );
-        }
+        //public methods:
 
         public void MainLoop(string[] args)
         {
@@ -129,7 +42,7 @@ namespace ZelluSimConsolaz
                 if (conf == null && sim == null)
                 {
                     conf = new CliConfig();
-                    sim = new ClassicSimulation(new SimulationSettings());
+                    sim = CreateCellSimulation();
                     FillWithRandoms();
                     conf.App = this;
                     SetWindowSize();
@@ -144,7 +57,7 @@ namespace ZelluSimConsolaz
 
                 if (sim == null)
                 {
-                    sim = new ClassicSimulation(new SimulationSettings());
+                    sim = CreateCellSimulation();
                     FillWithRandoms();
                     SetWindowSize();
                 }
@@ -163,8 +76,11 @@ namespace ZelluSimConsolaz
                 else
                 if (command.StartsWith("run"))
                 {
-                    AutoSimLoop();
+                    Rerender();
                     feedback = "Started automatic run of simulations.";
+                    feedbackType = FeedbackType.OKAY;
+                    AutoSimLoop();
+                    feedback = "Completed automatic run of simulations.";
                     feedbackType = FeedbackType.OKAY;
                 }
                 else
@@ -261,9 +177,21 @@ namespace ZelluSimConsolaz
                     feedbackType = FeedbackType.OKAY;
                 }
                 else
+                if (command.Equals("current?"))
+                {
+                    feedback = "Current generation is " + sim.CurrentGen + ".";
+                    feedbackType = FeedbackType.OKAY;
+                }
+                else
                 if (command.Equals("oldest?"))
                 {
                     feedback = "Oldest generation is " + sim.OldestGen + ".";
+                    feedbackType = FeedbackType.OKAY;
+                }
+                else
+                if (command.Equals("num?"))
+                {
+                    feedback = "Number of generations: " + sim.NumGens + ".";
                     feedbackType = FeedbackType.OKAY;
                 }
                 else
@@ -297,7 +225,7 @@ namespace ZelluSimConsolaz
                         bool success = int.TryParse(split[2], out n);
                         if (success && n >= 0)
                         {
-                            bool okay = sim.GoToGen(n);
+                            bool okay = sim.GoToGen(n, this);
                             if (okay)
                             {
                                 feedback = "Went to generation " + n + ".";
@@ -317,6 +245,11 @@ namespace ZelluSimConsolaz
                     }
                 }
                 else
+                if (command.Equals("help") || command.Equals("?"))
+                {
+                    ShowHelp();
+                }
+                else
                 {
                     feedback = "Unknown command: \"" + command + "\"";
                     feedbackType = FeedbackType.ERROR;
@@ -325,6 +258,151 @@ namespace ZelluSimConsolaz
                 Rerender();
             }
             while (!command.Equals("exit"));
+        }
+
+        public bool RequestingInterrupt() => (Keyboard.IsKeyDown(Key.Escape));
+
+        public void Rerender()
+        {
+            Console.BackgroundColor = conf.BackColor;
+            Console.Clear();
+
+            for (int i = 0; i < conf.TopLeftY; ++i)
+                Console.WriteLine();
+
+            decimal val;
+            for (int y = 0; y < sim.Settings.SizeY; ++y)
+            {
+                for (int j = 0; j < conf.TopLeftX; ++j)
+                    Console.Write(" ");
+                for (int x = 0; x < sim.Settings.SizeX; ++x)
+                {
+                    val = sim.GetCellValue(x, y);
+                    if (val <= 0m)
+                    {
+                        Console.ForegroundColor = conf.DeadColor;
+                        Console.Write(conf.DeadText);
+                    }
+                    else
+                    if (val >= 1m)
+                    {
+                        Console.ForegroundColor = conf.AlifeColor;
+                        Console.Write(conf.AlifeText);
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = conf.HalfAlifeColor;
+                        Console.Write(conf.HalfAlifeText);
+                    }
+                }
+                Console.WriteLine();
+            }
+
+            Console.ForegroundColor = conf.GenerationTextColor;
+            //Console.WriteLine(conf.GenerationText, sim.CurrentGen.ToString(conf.GenerationTextCulture));
+            Console.WriteLine(String.Format(conf.GenerationTextCulture, conf.GenerationText, sim.CurrentGen));
+
+            switch (feedbackType)
+            {
+                case FeedbackType.OKAY:  Console.ForegroundColor = conf.FeedbackColorOkay; break;
+                case FeedbackType.ERROR: Console.ForegroundColor = conf.FeedbackColorError; break;
+            }
+            Console.WriteLine(feedback);
+        }
+
+        public void AutoSimLoop()
+        {
+            running = true;
+            bool vis = Console.CursorVisible;
+            Console.CursorVisible = false;
+            do
+            {
+                sim.CalculateNextGen();
+                Rerender();
+                Console.ForegroundColor = conf.RunningColor;
+                Console.WriteLine();
+                Console.WriteLine(conf.RunningText);
+
+                if(conf.DelayMilliSeconds > 0)
+                    Thread.Sleep(conf.DelayMilliSeconds);
+            }
+            while(!Keyboard.IsKeyDown(Key.Escape));
+            running = false;
+            Console.CursorVisible = vis;
+        }
+
+        public void ShowHelp()
+        {
+            Console.Clear();
+            Console.ForegroundColor = conf.HelpColor;
+            int i = 1;
+            Console.WriteLine("List of available commands:"); i++;
+            Console.WriteLine("'help' or '?' - show available commands."); i++;
+            Console.WriteLine("'exit' - close the console, end program."); i++;
+            Console.WriteLine("'go to [n]' - go back or forward, until n."); i++;
+            Console.WriteLine("'zero' - label current gen as 0th gen."); i++;
+            Console.WriteLine("'back' - go back one generation."); i++;
+            Console.WriteLine("'oldest' - go back to the oldest gen."); i++;
+            Console.WriteLine("'num?' - how many generations are there?"); i++;
+            Console.WriteLine("'oldest?' - what's the oldest gen?"); i++;
+            Console.WriteLine("'current?' - what's the current gen?"); i++;
+            Console.WriteLine("'next' - go to the next gen."); i++;
+            Console.WriteLine("'clear' - set every cell to lowest value."); i++;
+            Console.WriteLine("'clear [x] [y]' - set cell to lowest value."); i++;
+            Console.WriteLine("'fill' - set every cell to highest value."); i++;
+            Console.WriteLine("'set size [w] [h]' - resize width/height."); i++;
+            Console.WriteLine("'set [x] [y] - set cell to highest value."); i++;
+            Console.WriteLine("'set [x] [y] [v] - set cell to value."); i++;
+            Console.WriteLine("'run' - start auto-compute (end: [ESC])."); i++;
+            Console.WriteLine("'random' - fill every cell with random."); i++;
+            Console.WriteLine(); i++;
+            Console.WindowHeight = i + 2;
+            Console.WindowWidth = 60;
+            Console.Write("Press any key to continue...");
+            Console.ReadKey();
+            SetWindowSize();
+        }
+
+        public void FillWith(decimal val)
+        {
+            for (int x = 0; x < sim.Settings.SizeX; ++x)
+                for (int y = 0; y < sim.Settings.SizeY; ++y)
+                    sim.SetCellValue(x, y, val);
+        }
+
+        public void FillWithRandoms()
+        {
+            for (int x = 0; x < sim.Settings.SizeX; ++x)
+                for (int y = 0; y < sim.Settings.SizeY; ++y)
+                    sim.SetCellValue(x, y, rand.Next(2) == 1 ? 1m : 0m);
+        }
+
+        public bool BoundsCheck(int x, int y)
+        {
+            return x >= 0 && x < sim.Settings.SizeX && y >= 0 && y < sim.Settings.SizeY;
+        }
+
+        public void SetWindowSize()
+        {
+            int paddingX = 4;
+            int paddingY = 4;
+            Console.SetWindowSize(
+                conf.TopLeftX + sim.Settings.SizeX + paddingX, 
+                conf.TopLeftY + sim.Settings.SizeY + paddingY
+                );
+        }
+
+        public ICellSimulation CreateCellSimulation()
+        {
+            //sim = new ClassicSimulation(new SimulationSettings());
+
+            SimulationSettings simSettings = new SimulationSettings();
+            //simSettings.MemSlots = 4;
+            simSettings.MemSlotsGrow = 2;
+            simSettings.MemSlotsMax = int.MaxValue;
+            sim = new ClassicSimulation(simSettings);
+
+            return sim;
         }
     }
 }

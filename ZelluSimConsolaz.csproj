@@ -44,10 +44,6 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
-    <Reference Include="ZelluSim, Version=0.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>libs\ZelluSim\ZelluSim.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConsoleApp.cs" />
@@ -57,11 +53,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="libs\ZelluSim\ZelluSim.deps.json" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="libs\ZelluSim\ZelluSim.dll" />
-    <Content Include="libs\ZelluSim\ZelluSim.pdb" />
+    <ProjectReference Include="..\ZelluSim\ZelluSim.csproj">
+      <Project>{2b5ae25f-ca6c-4017-9874-7a543db913ac}</Project>
+      <Name>ZelluSim</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
