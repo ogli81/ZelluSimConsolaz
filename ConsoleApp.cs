@@ -67,6 +67,37 @@ namespace ZelluSimConsolaz
                 Console.Write(conf.PromptText);
                 command = Console.ReadLine();
 
+                if (command.StartsWith("conf"))
+                {
+                    ConfigChanger changer = new ConfigChanger(conf);
+                    changer.MainLoop();
+                    SetWindowSize();
+                }
+                else
+                if (command.StartsWith("settings"))
+                {
+                    //TODO
+                    //change settings of the simulation (e.g. memory slots or size of the cell field)
+                }
+                else
+                if (command.StartsWith("sim"))
+                {
+                    //TODO
+                    //display a list with all our simulation types
+                }
+                else
+                if (command.StartsWith("save"))
+                {
+                    //TODO
+                    //idea: let user select: ui-settings/sim-settings/sim(with sim-settings, optionally with ui-settings too)
+                }
+                else
+                if (command.StartsWith("load"))
+                {
+                    //TODO
+                    //idea: let user select: ui-settings/sim-settings/sim(with sim-settings and ui-settings, if available)
+                }
+                else
                 if (command.StartsWith("random"))
                 {
                     FillWithRandoms();
@@ -337,6 +368,7 @@ namespace ZelluSimConsolaz
             Console.ForegroundColor = conf.HelpColor;
             int i = 1;
             Console.WriteLine("List of available commands:"); i++;
+            Console.WriteLine(); i++;
             Console.WriteLine("'help' or '?' - show available commands."); i++;
             Console.WriteLine("'exit' - close the console, end program."); i++;
             Console.WriteLine("'go to [n]' - go back or forward, until n."); i++;
@@ -355,6 +387,11 @@ namespace ZelluSimConsolaz
             Console.WriteLine("'set [x] [y] [v] - set cell to value."); i++;
             Console.WriteLine("'run' - start auto-compute (end: [ESC])."); i++;
             Console.WriteLine("'random' - fill every cell with random."); i++;
+            Console.WriteLine("'conf' - change ui settings."); i++;
+            Console.WriteLine("'settings' - change simulation settings."); i++;
+            Console.WriteLine("'sim' - select different type of simulation."); i++;
+            Console.WriteLine("'save' - save settings and/or simulation."); i++;
+            Console.WriteLine("'load' - load settings and/or simulation."); i++;
             Console.WriteLine(); i++;
             Console.WindowHeight = i + 2;
             Console.WindowWidth = 60;

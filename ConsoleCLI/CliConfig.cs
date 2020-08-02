@@ -26,7 +26,6 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected ConsoleApp app = null;
 
-        protected int cellSize = 23;
         protected int topLeftX = 3;
         protected int topLeftY = 2;
 
