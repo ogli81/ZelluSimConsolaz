@@ -17,15 +17,13 @@ namespace ZelluSimConsolaz.ConsoleCLI
             //state:
 
             public string Name { get; }
-            public Type Type { get; }
 
 
             //c'tors:
 
-            public Item(string name, Type type)
+            public Item(string name)
             {
                 Name = name;
-                Type = type;
             }
         }
 
@@ -41,28 +39,28 @@ namespace ZelluSimConsolaz.ConsoleCLI
         {
             this.conf = conf;
 
-            items.Add(new Item("topLeftX", typeof(System.Int32)));
-            items.Add(new Item("topLeftY", typeof(System.Int32)));
-            items.Add(new Item("alifeText", typeof(string)));
-            items.Add(new Item("deadText", typeof(string)));
-            items.Add(new Item("halfAlifeText", typeof(string)));
-            items.Add(new Item("alifeColor", typeof(ConsoleColor)));
-            items.Add(new Item("deadColor", typeof(ConsoleColor)));
-            items.Add(new Item("halfAlifeColor", typeof(ConsoleColor)));
-            items.Add(new Item("runningText", typeof(string)));
-            items.Add(new Item("stoppedText", typeof(string)));
-            items.Add(new Item("runningColor", typeof(ConsoleColor)));
-            items.Add(new Item("stoppedColor", typeof(ConsoleColor)));
-            items.Add(new Item("delayMilliSeconds", typeof(System.Int32)));
-            items.Add(new Item("feedbackColorOkay", typeof(ConsoleColor)));
-            items.Add(new Item("feedbackColorError", typeof(ConsoleColor)));
-            items.Add(new Item("generationText", typeof(string)));
-            items.Add(new Item("generationTextCulture", typeof(CultureInfo)));
-            items.Add(new Item("generationTextColor", typeof(ConsoleColor)));
-            items.Add(new Item("promptText", typeof(string)));
-            items.Add(new Item("promptColor", typeof(ConsoleColor)));
-            items.Add(new Item("helpColor", typeof(ConsoleColor)));
-            items.Add(new Item("backColor", typeof(ConsoleColor)));
+            items.Add(new Item("topLeftX"));
+            items.Add(new Item("topLeftY"));
+            items.Add(new Item("alifeText"));
+            items.Add(new Item("deadText"));
+            items.Add(new Item("halfAlifeText"));
+            items.Add(new Item("alifeColor"));
+            items.Add(new Item("deadColor"));
+            items.Add(new Item("halfAlifeColor"));
+            items.Add(new Item("runningText"));
+            items.Add(new Item("stoppedText"));
+            items.Add(new Item("runningColor"));
+            items.Add(new Item("stoppedColor"));
+            items.Add(new Item("delayMilliSeconds"));
+            items.Add(new Item("feedbackColorOkay"));
+            items.Add(new Item("feedbackColorError"));
+            items.Add(new Item("generationText"));
+            items.Add(new Item("generationTextCulture"));
+            items.Add(new Item("generationTextColor"));
+            items.Add(new Item("promptText"));
+            items.Add(new Item("promptColor"));
+            items.Add(new Item("helpColor"));
+            items.Add(new Item("backColor"));
         }
 
         public void MainLoop()
@@ -94,7 +92,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
             foreach(Item item in items)
             {
-                RenderWord(item.Name+","+item.Type.ToString(), i);
+                RenderWord(item.Name, i);
                 i++;
             }
         }
@@ -106,31 +104,32 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected void ConfigureItem(Item item)
         {
-            if (item.Type == typeof(System.Int32))
+            Type type = GetField(item.Name).FieldType;
+            if (type == typeof(System.Int32))
             {
                 int input = UserEntersInt32(item);
                 SetItemToConfig(item, input);
             }
             else
-            if (item.Type == typeof(string))
+            if (type == typeof(string))
             {
                 string input = UserEntersString(item);
                 SetItemToConfig(item, input);
             }
             else
-            if (item.Type == typeof(ConsoleColor))
+            if (type == typeof(ConsoleColor))
             {
                 ConsoleColor input = UserEntersColor(item);
                 SetItemToConfig(item, input);
             }
             else
-            if (item.Type == typeof(CultureInfo))
+            if (type == typeof(CultureInfo))
             {
                 CultureInfo input = UserEntersCulture(item);
                 SetItemToConfig(item, input);
             }
             else
-                throw new NotImplementedException("can't handle type: " + item.Type);
+                throw new NotImplementedException("can't handle type (yet): " + type);
         }
 
         protected string UserEntersString(Item item)
