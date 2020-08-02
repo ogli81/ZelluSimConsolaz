@@ -10,57 +10,20 @@ using System.Windows.Media;
 
 namespace ZelluSimConsolaz.ConsoleCLI
 {
-    public class ConfigChanger
+    public partial class ConfigChanger
     {
-        public struct Item
-        {
-            //state:
-
-            public string Name { get; }
-
-
-            //c'tors:
-
-            public Item(string name)
-            {
-                Name = name;
-            }
-        }
-
         protected CliConfig conf;
         protected int item = 0;
         protected bool edit = false;
         protected ConsoleColor back = ConsoleColor.DarkBlue;
         protected ConsoleColor fore = ConsoleColor.Yellow;
+        protected ConsoleColor info = ConsoleColor.Gray;
         protected ConsoleColor text = ConsoleColor.White;
-        protected List<Item> items = new List<Item>();
+        
 
         public ConfigChanger(CliConfig conf)
         {
             this.conf = conf;
-
-            items.Add(new Item("topLeftX"));
-            items.Add(new Item("topLeftY"));
-            items.Add(new Item("alifeText"));
-            items.Add(new Item("deadText"));
-            items.Add(new Item("halfAlifeText"));
-            items.Add(new Item("alifeColor"));
-            items.Add(new Item("deadColor"));
-            items.Add(new Item("halfAlifeColor"));
-            items.Add(new Item("runningText"));
-            items.Add(new Item("stoppedText"));
-            items.Add(new Item("runningColor"));
-            items.Add(new Item("stoppedColor"));
-            items.Add(new Item("delayMilliSeconds"));
-            items.Add(new Item("feedbackColorOkay"));
-            items.Add(new Item("feedbackColorError"));
-            items.Add(new Item("generationText"));
-            items.Add(new Item("generationTextCulture"));
-            items.Add(new Item("generationTextColor"));
-            items.Add(new Item("promptText"));
-            items.Add(new Item("promptColor"));
-            items.Add(new Item("helpColor"));
-            items.Add(new Item("backColor"));
         }
 
         public void MainLoop()
@@ -72,29 +35,24 @@ namespace ZelluSimConsolaz.ConsoleCLI
                 RenderList();
                 key = Console.ReadKey();
                 if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.PageUp || key.Key == ConsoleKey.LeftArrow)
-                    item = item == 0 ? items.Count - 1 : item - 1;
+                    item = item == 0 ? conf.NumItems - 1 : item - 1;
                 else
                 if (key.Key == ConsoleKey.DownArrow || key.Key == ConsoleKey.PageDown || key.Key == ConsoleKey.RightArrow)
-                    item = (item + 1) % items.Count;
+                    item = (item + 1) % conf.NumItems;
                 else
                 if (key.Key == ConsoleKey.Enter)
-                    ConfigureItem(items[item]);
+                    ConfigureItem(conf.GetItem(item));
             }
             while (key.Key != ConsoleKey.Escape);
         }
 
         protected void RenderList()
         {
-            int i = 0;
             Console.BackgroundColor = back;
             Console.ForegroundColor = fore;
             Console.Clear();
-
-            foreach(Item item in items)
-            {
-                RenderWord(item.Name, i);
-                i++;
-            }
+            for(int i = 0; i < conf.NumItems; ++i)
+                RenderWord(conf.GetItem(i).Name, i);
         }
 
         protected void RenderWord(string word, int index)
@@ -136,14 +94,21 @@ namespace ZelluSimConsolaz.ConsoleCLI
         {
             Console.WriteLine();
             Console.Write("Enter new value: ");
-            return Console.ReadLine();
+            ConsoleColor was = Console.ForegroundColor;
+            Console.ForegroundColor = text;
+            string input = Console.ReadLine();
+            Console.ForegroundColor = was;
+            return input;
         }
 
         protected int UserEntersInt32(Item item)
         {
             Console.WriteLine();
             Console.Write("Enter new value: ");
+            ConsoleColor was = Console.ForegroundColor;
+            Console.ForegroundColor = text;
             string str = Console.ReadLine();
+            Console.ForegroundColor = was;
             if (int.TryParse(str, out int result))
                 return result;
             return GetInt32FromConfig(item);

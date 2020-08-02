@@ -31,14 +31,14 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected string alifeText = "X";
         protected string deadText = "-";
-        protected string halfAlifeText = "+";
+        protected string halfAlifeText = "~"; //also cool: "+"
         protected ConsoleColor alifeColor = ConsoleColor.Green;
         protected ConsoleColor deadColor = ConsoleColor.Red;
         protected ConsoleColor halfAlifeColor = ConsoleColor.Yellow;
         //protected bool interpolateColors = true; //can't be done with Console colors
 
-        protected string runningText = "RUNNING";
-        protected string stoppedText = "STOPPED";
+        protected string runningText = "RUNNING...";
+        protected string stoppedText = "STOPPED.";
         protected ConsoleColor runningColor = ConsoleColor.DarkGreen;
         protected ConsoleColor stoppedColor = ConsoleColor.DarkRed;
         protected int delayMilliSeconds = 50;
@@ -57,6 +57,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected ConsoleColor backColor = ConsoleColor.Black;
 
+        protected List<Item> items = new List<Item>();
+
 
         //c'tors:
 
@@ -67,7 +69,28 @@ namespace ZelluSimConsolaz.ConsoleCLI
         /// </summary>
         public CliConfig()
         {
-
+            items.Add(new Item("topLeftX", "top left corner, x-coordinate"));
+            items.Add(new Item("topLeftY", "top left corner, y-coordinate"));
+            items.Add(new Item("alifeText", "typically only 1 character like 'X'"));
+            items.Add(new Item("deadText", "typically only 1 character like '-'"));
+            items.Add(new Item("halfAlifeText", "typically only 1 character like '~'"));
+            items.Add(new Item("alifeColor", "color for the character 'X'"));
+            items.Add(new Item("deadColor", "color for the character '-'"));
+            items.Add(new Item("halfAlifeColor", "color for the character '~'"));
+            items.Add(new Item("runningText", "typically a text like 'RUNNING...'"));
+            items.Add(new Item("stoppedText", "typically a text like 'STOPPED.'"));
+            items.Add(new Item("runningColor", "color for the text 'RUNNING...'"));
+            items.Add(new Item("stoppedColor", "color for the text 'STOPPED.'"));
+            items.Add(new Item("delayMilliSeconds", "number (1 ms = 0.001 seconds)"));
+            items.Add(new Item("feedbackColorOkay", "color for successful commands"));
+            items.Add(new Item("feedbackColorError", "color for failed commands"));
+            items.Add(new Item("generationText", "a code like: 'gen: {0:#,0}'"));
+            items.Add(new Item("generationTextCulture", "how are numbers written?"));
+            items.Add(new Item("generationTextColor", "color for 'generationText'"));
+            items.Add(new Item("promptText", "a prompt for user input like '> '"));
+            items.Add(new Item("promptColor", "color of that prompt '> '"));
+            items.Add(new Item("helpColor", "color help text (with 'help' or '?')"));
+            items.Add(new Item("backColor", "general background color for console"));
         }
 
 
@@ -86,6 +109,10 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
 
         //public methods:
+
+        public int NumItems => items.Count;
+
+        public Item GetItem(int index) => items[index];
 
         /// <summary>
         /// Allows to temporarily suppress any GUI rebuilds and GUI reformats.<br></br>
