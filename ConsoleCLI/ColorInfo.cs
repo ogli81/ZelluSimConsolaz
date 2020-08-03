@@ -73,7 +73,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
                 case 6: return true;
                 case 7: return false;
                 case 8: return true;
-                case 9: return false;
+                case 9: return true;
                 case 10: return false;
                 case 11: return false;
                 case 12: return false;

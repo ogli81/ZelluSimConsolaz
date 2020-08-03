@@ -37,6 +37,8 @@ namespace ZelluSimConsolaz
 
         public void MainLoop(string[] args)
         {
+            Console.SetBufferSize(Console.LargestWindowWidth, Console.LargestWindowHeight);
+
             do
             {
                 if (conf == null && sim == null)
@@ -167,6 +169,51 @@ namespace ZelluSimConsolaz
                         else
                         {
                             feedback = "Could not set to new size.";
+                            feedbackType = FeedbackType.ERROR;
+                        }
+                    }
+                }
+                if (command.StartsWith("set param"))
+                {
+                    string[] split = command.Split(sep);
+                    if(split.Length > 3)
+                    {
+                        int n = -1;
+                        decimal v = -1m;
+                        bool success = int.TryParse(split[2], out n);
+                        success = success && decimal.TryParse(split[3], out v);
+                        if(success)
+                        {
+                            SimulationParameter param = null;
+
+                            if (n == 1) param = sim.Param1;
+                            if (n == 2) param = sim.Param2;
+                            //TODO: param = sim.GetParam(n);
+                            //TODO: int maxN = sim.GetNumParams();
+
+                            if(param != null)
+                            {
+                                if (v >= param.Min && v <= param.Max)
+                                {
+                                    param.Current = v;
+                                    feedback = $"Set param {n} to value {v}.";
+                                    feedbackType = FeedbackType.OKAY;
+                                }
+                                else
+                                {
+                                    feedback = $"Value {v} not in allowed interval [{param.Min}..{param.Max}]!";
+                                    feedbackType = FeedbackType.ERROR;
+                                }
+                            }
+                            else
+                            {
+                                feedback = $"Unknown param [{n}] (try a different index!).";
+                                feedbackType = FeedbackType.ERROR;
+                            }
+                        }
+                        else
+                        {
+                            feedback = "Could not set param (incorrect number?).";
                             feedbackType = FeedbackType.ERROR;
                         }
                     }
@@ -457,6 +504,7 @@ namespace ZelluSimConsolaz
 
         public void ShowSimInfo()
         {
+            Console.SetWindowSize(Console.LargestWindowWidth, Console.WindowHeight);
             Console.Clear();
             Console.ForegroundColor = conf.HelpColor;
             

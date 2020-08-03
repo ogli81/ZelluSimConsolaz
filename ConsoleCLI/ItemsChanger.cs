@@ -279,27 +279,31 @@ namespace ZelluSimConsolaz.ConsoleCLI
             ConsoleKeyInfo key;
             String str = "";
             List<CultureInfo> cul = new List<CultureInfo>();
-            CultureInfo[] all = CultureInfo.GetCultures(CultureTypes.AllCultures);
+            CultureInfo[] all1 = CultureInfo.GetCultures(CultureTypes.AllCultures);
+            List<CultureInfo> all = new List<CultureInfo>(all1);
+            all.Sort(delegate (CultureInfo ci1, CultureInfo ci2)
+            {
+                return ci1.DisplayName.CompareTo(ci2.DisplayName);
+            });
             int sel = -1;
-
-            Console.Clear();
-            Console.ForegroundColor = conf.HelpColor;
-            Console.WriteLine("Chose your language/format - use these keys:");
-            Console.WriteLine("[ESC] = abort anytime (doesn't change the format)");
-            Console.WriteLine("[ENTER] = select this language (only if valid)");
-            Console.WriteLine("[TAB] = extend to match the next fitting language");
-            Console.WriteLine("[Up]/[Left]/[PageUp] = cycle to previous language");
-            Console.WriteLine("[Down]/[Right]/[PageDown] = cycle to next language");
-            Console.WriteLine("[BackSpace] = delete the last character");
-            Console.WriteLine("[A]..[Z] (and others) = enter a new character");
-            Console.WriteLine();
 
             do
             {
                 Thread.Sleep(conf.DelayMilliSeconds);
 
-                //Console.Clear(); <--- this is problematic, because if [UpArrow] or [LeftArrow] is pressed, we see nothing...
-                //---> the double-buffered console might solve this problem
+                Console.Clear(); //<--- this is problematic, because if [UpArrow] or [LeftArrow] is pressed, we see nothing...
+                                 //---> the double-buffered console might solve this problem
+
+                Console.ForegroundColor = conf.HelpColor;
+                Console.WriteLine("Chose your language/format - use these keys:");
+                Console.WriteLine("[ESC] = abort anytime (doesn't change the format)");
+                Console.WriteLine("[ENTER] = select this language (only if valid)");
+                Console.WriteLine("[TAB] = extend to match the next fitting language");
+                Console.WriteLine("[Up]/[Left]/[PageUp] = cycle to previous language");
+                Console.WriteLine("[Down]/[Right]/[PageDown] = cycle to next language");
+                Console.WriteLine("[BackSpace] = delete the last character");
+                Console.WriteLine("[A]..[Z] (and others) = enter a new character");
+                Console.WriteLine();
 
                 Console.ForegroundColor = conf.PromptColor;
                 Console.Write(conf.PromptText);
@@ -316,13 +320,18 @@ namespace ZelluSimConsolaz.ConsoleCLI
                 if (key.Key == ConsoleKey.Backspace)
                 {
                     str = str.Length == 0 ? str : str.Substring(0, str.Length - 1);
-                    sel = Array.FindIndex(all, (e) => e.DisplayName.ToLower().Equals(str.ToLower()));
+                    //sel = Array.FindIndex(all, (e) => e.DisplayName.ToLower().Equals(str.ToLower()));
+                    sel = all.FindIndex((e) => e.DisplayName.ToLower().Equals(str.ToLower()));
                 }
                 else
-                if (key.Key == ConsoleKey.Tab && cul.Count > 0)
+                if (key.Key == ConsoleKey.Tab)
                 {
-                    str = cul[0].DisplayName;
-                    sel = Array.FindIndex(all, (e) => e.DisplayName.ToLower().Equals(str.ToLower()));
+                    if (cul.Count > 0)
+                    {
+                        str = cul[0].DisplayName;
+                        //sel = Array.FindIndex(all, (e) => e.DisplayName.ToLower().Equals(str.ToLower()));
+                        sel = all.FindIndex((e) => e.DisplayName.ToLower().Equals(str.ToLower()));
+                    }
                 }
                 else
                 if (key.Key == ConsoleKey.Enter && sel >= 0)
@@ -339,7 +348,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
                     else
                     {
                         sel++;
-                        if (sel >= all.Length)
+                        //if (sel >= all.Length)
+                        if (sel >= all.Count)
                             sel = 0;
                         str = all[sel].DisplayName;
                     }
@@ -349,13 +359,15 @@ namespace ZelluSimConsolaz.ConsoleCLI
                 {
                     if (sel < 0)
                     {
-                        sel = all.Length - 1;
+                        //sel = all.Length - 1;
+                        sel = all.Count - 1;
                     }
                     else
                     {
                         sel--;
                         if (sel == -1)
-                            sel = all.Length - 1;
+                            //sel = all.Length - 1;
+                            sel = all.Count - 1;
                         str = all[sel].DisplayName;
                     }
                 }
@@ -367,7 +379,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
                 else
                 {
                     str += key.KeyChar;
-                    sel = Array.FindIndex(all, (e) => e.DisplayName.ToLower().Equals(str.ToLower()));
+                    //sel = Array.FindIndex(all, (e) => e.DisplayName.ToLower().Equals(str.ToLower()));
+                    sel = all.FindIndex((e) => e.DisplayName.ToLower().Equals(str.ToLower()));
                 }
                 Console.WriteLine();
             }
