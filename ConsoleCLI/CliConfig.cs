@@ -15,7 +15,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
     /// 'RebuildGui' will be necessary when the fundamental GUI elements have changed in size, position or quantity. 
     /// 'ReformatGui' will be enough in situations where only colors or texts have changed.
     /// </summary>
-    public class CliConfig
+    public class CliConfig : IHasItems
     {
         //state:
 

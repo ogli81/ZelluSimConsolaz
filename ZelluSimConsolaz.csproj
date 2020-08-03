@@ -49,7 +49,7 @@
     <Compile Include="ConsoleApp.cs" />
     <Compile Include="ConsoleCLI\ColorInfo.cs" />
     <Compile Include="ConsoleCLI\CliConfig.cs" />
-    <Compile Include="ConsoleCLI\ConfigChanger.cs" />
+    <Compile Include="ConsoleCLI\ItemsChanger.cs" />
     <Compile Include="ConsoleCLI\Item.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

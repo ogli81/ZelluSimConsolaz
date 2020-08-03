@@ -43,7 +43,7 @@ namespace ZelluSimConsolaz
                 {
                     conf = CreateCliConfig();
                     sim = CreateCellSimulation();
-                    FillWithRandoms();
+                    FillWithRandoms(rand);
                     conf.App = this;
                     SetWindowSize();
                 }
@@ -58,7 +58,7 @@ namespace ZelluSimConsolaz
                 if (sim == null)
                 {
                     sim = CreateCellSimulation();
-                    FillWithRandoms();
+                    FillWithRandoms(rand);
                     SetWindowSize();
                 }
 
@@ -67,22 +67,28 @@ namespace ZelluSimConsolaz
                 Console.Write(conf.PromptText);
                 command = Console.ReadLine();
 
-                if (command.StartsWith("conf"))
+                if (command.Equals("default"))
                 {
-                    ConfigChanger changer = new ConfigChanger(conf);
+                    conf = null;
+                    sim = null;
+                }
+                else
+                if (command.Equals("conf"))
+                {
+                    ItemsChanger<CliConfig> changer = new ItemsChanger<CliConfig>(conf, conf);
                     changer.MainLoop();
                     SetWindowSize();
                     feedback = "Left Configuration management.";
                     feedbackType = FeedbackType.OKAY;
                 }
                 else
-                if (command.StartsWith("settings"))
+                if (command.Equals("settings"))
                 {
                     //TODO
                     //change settings of the simulation (e.g. memory slots or size of the cell field)
                 }
                 else
-                if (command.StartsWith("sim"))
+                if (command.Equals("sim"))
                 {
                     //TODO
                     //display a list with all our simulation types
@@ -102,12 +108,34 @@ namespace ZelluSimConsolaz
                 else
                 if (command.StartsWith("random"))
                 {
-                    FillWithRandoms();
-                    feedback = "Filled cells with random numbers.";
-                    feedbackType = FeedbackType.OKAY;
+                    string[] split = command.Split(sep);
+                    Random r;
+                    bool success;
+                    int seed;
+                    if (split.Length < 2)
+                    {
+                        r = rand;
+                        success = true;
+                    }
+                    else
+                    {
+                        success = int.TryParse(split[1], out seed);
+                        r = new Random(seed);
+                    }
+                    if (success)
+                    {
+                        FillWithRandoms(r);
+                        feedback = "Filled cells with random numbers.";
+                        feedbackType = FeedbackType.OKAY;
+                    }
+                    else
+                    {
+                        feedback = "Could not parse seed value: " + split[1];
+                        feedbackType = FeedbackType.ERROR;
+                    }
                 }
                 else
-                if (command.StartsWith("run"))
+                if (command.Equals("run"))
                 {
                     Rerender();
                     feedback = "Started automatic run of simulations.";
@@ -120,16 +148,17 @@ namespace ZelluSimConsolaz
                 if (command.StartsWith("set size"))
                 {
                     string[] split = command.Split(sep);
-                    if (split.Length > 3)
+                    if (split.Length > 2)
                     {
                         int newX, newY = -1;
                         bool success = int.TryParse(split[2], out newX);
-                        success = success && int.TryParse(split[3], out newY);
-                        if (success && newX > 0 && newY > 0)
+                        if(split.Length > 3)
+                            success = success && int.TryParse(split[3], out newY);
+                        if (success && newX > 0 && split.Length < 4 || newY > 0)
                         {
                             sim.Settings.SuppressUpdates = true;
                             sim.Settings.SizeX = newX;
-                            sim.Settings.SizeY = newY;
+                            sim.Settings.SizeY = split.Length > 3 ? newY : newX;
                             sim.Settings.SuppressUpdates = false;
                             feedback = "Set x and y to desired values.";
                             feedbackType = FeedbackType.OKAY;
@@ -278,6 +307,11 @@ namespace ZelluSimConsolaz
                     }
                 }
                 else
+                if (command.Equals("info"))
+                {
+                    ShowSimInfo();
+                }
+                else
                 if (command.Equals("help") || command.Equals("?"))
                 {
                     ShowHelp();
@@ -297,6 +331,9 @@ namespace ZelluSimConsolaz
 
         public void Rerender()
         {
+            if (sim == null || conf == null)
+                return;
+
             Console.BackgroundColor = conf.BackColor;
             Console.Clear();
 
@@ -378,10 +415,12 @@ namespace ZelluSimConsolaz
         {
             Console.Clear();
             Console.ForegroundColor = conf.HelpColor;
+
             int i = 1;
             Console.WriteLine("List of available commands:"); i++;
             Console.WriteLine(); i++;
             Console.WriteLine("'help' or '?' - show available commands."); i++;
+            Console.WriteLine("'info - get information page for simulation."); i++;//TODO
             Console.WriteLine("'exit' - close the console, end program."); i++;
             Console.WriteLine("'go to [n]' - go back or forward, until n."); i++;
             Console.WriteLine("'zero' - label current gen as 0th gen."); i++;
@@ -399,14 +438,67 @@ namespace ZelluSimConsolaz
             Console.WriteLine("'set [x] [y] [v] - set cell to value."); i++;
             Console.WriteLine("'run' - start auto-compute (end: [ESC])."); i++;
             Console.WriteLine("'random' - fill every cell with random."); i++;
+            Console.WriteLine("'random [s]' - fill with random (s = seed)."); i++;
             Console.WriteLine("'conf' - change ui settings."); i++;
-            Console.WriteLine("'settings' - change simulation settings."); i++;
-            Console.WriteLine("'sim' - select different type of simulation."); i++;
-            Console.WriteLine("'save' - save settings and/or simulation."); i++;
-            Console.WriteLine("'load' - load settings and/or simulation."); i++;
+            Console.WriteLine("'settings' - change simulation settings."); i++;//TODO
+            Console.WriteLine("'sim' - select/configure type of simulation."); i++;//TODO
+            Console.WriteLine("'save' - save settings and/or simulation."); i++;//TODO
+            Console.WriteLine("'load' - load settings and/or simulation."); i++;//TODO
+            Console.WriteLine("'default' - default settings and simulation."); i++;
+            Console.WriteLine("'set param [n] [v] - set nth param to value."); i++;//TODO
             Console.WriteLine(); i++;
             Console.WindowHeight = i + 2;
             Console.WindowWidth = 60;
+            Console.Write("Press any key to continue...");
+            Console.ReadKey();
+            SetWindowSize();
+        }
+
+        public void ShowSimInfo()
+        {
+            Console.Clear();
+            Console.ForegroundColor = conf.HelpColor;
+            
+            Console.WriteLine($"Information about the simulation of type {sim.GetType()}:");
+            
+            Console.WriteLine("Info:");
+            Console.WriteLine(sim.Info);
+
+            Console.WriteLine("Param1:");
+            if (sim.Param1 == null)
+                Console.WriteLine("(N/A)");
+            else
+            {
+                Console.WriteLine(sim.Param1.Name);
+                Console.WriteLine(sim.Param1.Info);
+                Console.WriteLine($"[{sim.Param1.Min}..{sim.Param1.Max}] (currently at {sim.Param1.Current})");
+            }
+
+            Console.WriteLine("Param2:");
+            if (sim.Param1 == null)
+                Console.WriteLine("(N/A)");
+            else
+            {
+                Console.WriteLine(sim.Param2.Name);
+                Console.WriteLine(sim.Param2.Info);
+                Console.WriteLine($"[{sim.Param2.Min}..{sim.Param2.Max}] (currently at {sim.Param2.Current})");
+            }
+
+            Console.WriteLine("Generations:");
+            Console.WriteLine($"Number of generations in memory: {sim.NumGens}");
+            Console.WriteLine($"Number-label of the current gen: {sim.CurrentGen}");
+            Console.WriteLine($"Number-label of the oldest gen:  {sim.OldestGen}");
+
+            Console.WriteLine("Geometry:");
+            Console.WriteLine($"{sim.Settings.SizeX}x{sim.Settings.SizeY} cells");
+            Console.WriteLine("The world "+(sim.Settings.IsWrap ? "does wrap" : "doesn't wrap")+" at the outer borders.");
+
+            Console.WriteLine("Life sum:");
+            Console.WriteLine("sum = " + sim.GetSumOfCellValues());
+            Console.WriteLine("average = " + sim.GetAverageCellValue());
+            Console.WriteLine("median = " + sim.GetMedianCellValue());
+
+            Console.WriteLine();
             Console.Write("Press any key to continue...");
             Console.ReadKey();
             SetWindowSize();
@@ -419,11 +511,11 @@ namespace ZelluSimConsolaz
                     sim.SetCellValue(x, y, val);
         }
 
-        public void FillWithRandoms()
+        public void FillWithRandoms(Random r)
         {
             for (int x = 0; x < sim.Settings.SizeX; ++x)
                 for (int y = 0; y < sim.Settings.SizeY; ++y)
-                    sim.SetCellValue(x, y, rand.Next(2) == 1 ? 1m : 0m);
+                    sim.SetCellValue(x, y, r.Next(2) == 1 ? 1m : 0m);
         }
 
         public bool BoundsCheck(int x, int y)
