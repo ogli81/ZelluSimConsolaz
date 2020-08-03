@@ -51,10 +51,13 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected string promptText = "> ";
         protected ConsoleColor promptColor = ConsoleColor.White;
+        protected ConsoleColor userColor = ConsoleColor.Yellow;
 
-        protected ConsoleColor helpColor = ConsoleColor.Gray;
+        protected ConsoleColor helpColor = ConsoleColor.Yellow;
+        protected ConsoleColor infoColor = ConsoleColor.Gray;
 
         protected ConsoleColor backColor = ConsoleColor.Black;
+        //protected ConsoleColor helpBackColor = ConsoleColor.DarkBlue; //was an idea: help is yellow on dark blue
 
         protected List<Item> items = new List<Item>();
 
@@ -319,6 +322,15 @@ namespace ZelluSimConsolaz.ConsoleCLI
         }
 
         /// <summary>
+        /// We use this color for the command-line input of the user.
+        /// </summary>
+        public ConsoleColor UserColor
+        {
+            get => userColor;
+            set { userColor = value; TryRerender(); }
+        }
+
+        /// <summary>
         /// We use this color for feedback messages when everything is fine.
         /// </summary>
         public ConsoleColor FeedbackColorOkay
@@ -346,6 +358,17 @@ namespace ZelluSimConsolaz.ConsoleCLI
         }
 
         /// <summary>
+        /// We use this color to display secondary information (usually in gray). 
+        /// This is additional information that should not be so bright. So, the 
+        /// more important color is bright white or yellow.
+        /// </summary>
+        public ConsoleColor InfoColor
+        {
+            get => infoColor;
+            set { infoColor = value; TryRerender(); }
+        }
+
+        /// <summary>
         /// This is the background color of our console.
         /// </summary>
         public ConsoleColor BackColor
@@ -353,6 +376,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
             get => backColor;
             set { backColor = value; TryRerender(); }
         }
+
         //TODO: background-color for everything
         //TODO: color for command (that the user is currently typing in after the prompt)
     }

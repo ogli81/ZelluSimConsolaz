@@ -21,10 +21,6 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected CliConfig conf;
         protected int item = 0;
         protected bool edit = false;
-        protected ConsoleColor back = ConsoleColor.DarkBlue;
-        protected ConsoleColor fore = ConsoleColor.Yellow;
-        protected ConsoleColor info = ConsoleColor.Gray;
-        protected ConsoleColor text = ConsoleColor.White;
         
         /// <summary>
         /// C'tor for our changer. No heavy lifting - can be used many times without problems.
@@ -37,6 +33,9 @@ namespace ZelluSimConsolaz.ConsoleCLI
             this.conf = conf;
         }
 
+        /// <summary>
+        /// Use this method to start the rendering process. It will terminate (eventually). 
+        /// </summary>
         public void MainLoop()
         {
             Console.SetWindowSize(60, 30);
@@ -63,8 +62,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected void RenderList()
         {
-            Console.BackgroundColor = back;
-            Console.ForegroundColor = fore;
+            Console.BackgroundColor = conf.BackColor;
+            Console.ForegroundColor = conf.HelpColor;
             Console.Clear();
             for(int i = 0; i < target.NumItems; ++i)
                 RenderWord(target.GetItem(i), i);
@@ -73,15 +72,15 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected void RenderWord(Item it, int index)
         {
             string word = it.Name;
-            Console.ForegroundColor = fore;
+            Console.ForegroundColor = conf.HelpColor;
             Console.Write((index == item ? "[" : " ") + word + (index == item ? "]" : " "));
-            Console.ForegroundColor = info;
+            Console.ForegroundColor = conf.InfoColor;
             Console.WriteLine(" " + it.Info);
         }
 
         protected void RenderList2(int item)
         {
-            Console.BackgroundColor = back;
+            Console.BackgroundColor = conf.BackColor;
             Console.Clear();
             int longest = 0;
             for (int i = 0; i < ColorInfo.NumColors; ++i)
@@ -92,10 +91,10 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected void RenderWord2(int index, int item, int longestName)
         {
-            Console.BackgroundColor = back;
-            Console.ForegroundColor = fore;
+            Console.BackgroundColor = conf.BackColor;
+            Console.ForegroundColor = conf.HelpColor;
             string word = ColorInfo.GetColorName(index);
-            Console.ForegroundColor = fore;
+            Console.ForegroundColor = conf.HelpColor;
             Console.Write((index == item ? "[" : " ") + word + (index == item ? "]" : " "));
             string arrow = "";
             arrow = arrow.PadRight(longestName - word.Length, '-');
@@ -183,6 +182,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
         //user selects 'Yes' or 'No' ('On' or 'Off') ('1' or '0) ('Day' or 'Night') ('A' or 'B')
         protected bool? UserEntersBoolean(Item item, T target, string YesStr = "Yes", string NoStr = "No")
         {
+            //TODO:
             throw new NotImplementedException();
             //Console.WriteLine();
             //Console.Write("Select: ");
@@ -208,9 +208,11 @@ namespace ZelluSimConsolaz.ConsoleCLI
             string originalStr = GetString(item, target);
             Console.WriteLine();
             Console.WriteLine($"Original value: {originalStr}");
-            Console.Write("Enter new value: ");
+            Console.WriteLine("Enter new value: ");
             ConsoleColor was = Console.ForegroundColor;
-            Console.ForegroundColor = text;
+            Console.ForegroundColor = conf.PromptColor;
+            Console.Write(conf.PromptText);
+            Console.ForegroundColor = conf.UserColor;
             string input = Console.ReadLine();
             Console.ForegroundColor = was;
             return input;
@@ -222,9 +224,11 @@ namespace ZelluSimConsolaz.ConsoleCLI
             int originalInt = GetInt32(item, target);
             Console.WriteLine();
             Console.WriteLine($"Original value: {originalInt}");
-            Console.Write("Enter new value: ");
+            Console.WriteLine("Enter new value: ");
             ConsoleColor was = Console.ForegroundColor;
-            Console.ForegroundColor = text;
+            Console.ForegroundColor = conf.PromptColor;
+            Console.Write(conf.PromptText);
+            Console.ForegroundColor = conf.UserColor;
             string str = Console.ReadLine();
             Console.ForegroundColor = was;
             if (int.TryParse(str, out int result))
@@ -297,7 +301,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
                 Console.Write(conf.PromptText);
                 Console.ForegroundColor = sel < 0 ? conf.FeedbackColorError : conf.FeedbackColorOkay;
                 Console.Write(str);
-                Console.ForegroundColor = conf.PromptColor;
+                Console.ForegroundColor = conf.UserColor;
                 
                 cul.Clear();
                 foreach (CultureInfo ci in all)

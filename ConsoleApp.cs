@@ -65,6 +65,7 @@ namespace ZelluSimConsolaz
                 Console.WriteLine();
                 Console.ForegroundColor = conf.PromptColor;
                 Console.Write(conf.PromptText);
+                Console.ForegroundColor = conf.UserColor;
                 command = Console.ReadLine();
 
                 if (command.Equals("default"))
