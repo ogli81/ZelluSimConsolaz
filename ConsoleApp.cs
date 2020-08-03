@@ -8,12 +8,17 @@ using ZelluSim.Misc;
 
 namespace ZelluSimConsolaz
 {
-    public enum FeedbackType
-    {
-        OKAY,
-        ERROR
-    }
-
+    /// <summary>
+    /// The main class of the standard CLI for ZelluSim. Since we want to display 
+    /// 2D information (the cell field) a CLI is probably not the best option 
+    /// to work with ZelluSim. However, we use a simple clear-and-rerender-paradigm
+    /// for many parts of this implementation and simple text input for some
+    /// parts.
+    /// <br></br>
+    /// This works quite well, except for some "flickering" issues. There are some
+    /// awesome attempts by others to add double-buffering to a C# console. When 
+    /// we have some time, we may experiment with their code.
+    /// </summary>
     public class ConsoleApp : IInterruptRequester
     {
         //state:
@@ -37,7 +42,8 @@ namespace ZelluSimConsolaz
 
         public void MainLoop(string[] args)
         {
-            Console.SetBufferSize(Console.LargestWindowWidth, Console.LargestWindowHeight);
+            Console.SetBufferSize(2*Console.LargestWindowWidth, 10*Console.LargestWindowHeight);
+            //not really sure about this line (we may still need double buffering and/or custom-flush)
 
             do
             {

@@ -50,6 +50,7 @@
     <Compile Include="ConsoleCLI\ColorInfo.cs" />
     <Compile Include="ConsoleCLI\CliConfig.cs" />
     <Compile Include="ConsoleCLI\ItemsChanger.cs" />
+    <Compile Include="ConsoleCLI\FeedbackType.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
