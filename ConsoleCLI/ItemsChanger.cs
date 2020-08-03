@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using ZelluSim.Misc;
 
 namespace ZelluSimConsolaz.ConsoleCLI
@@ -42,6 +43,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
             ConsoleKeyInfo key;
             do
             {
+                Thread.Sleep(conf.DelayMilliSeconds);
                 RenderList();
                 key = Console.ReadKey();
                 if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.PageUp || key.Key == ConsoleKey.LeftArrow)
@@ -156,7 +158,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
             else
             if (type == typeof(Enum))
             {
-                if(typeof(Enum).GetCustomAttributes<FlagsAttribute>().Any())
+                if (typeof(Enum).GetCustomAttributes<FlagsAttribute>().Any())
                 {
                     //UserEntersFlagsEnum
                 }
@@ -165,11 +167,10 @@ namespace ZelluSimConsolaz.ConsoleCLI
                     //UserEntersEnum
                 }
             }
-
-            MemFullBehavior mfb = MemFullBehavior.FORGET_SILENTLY | MemFullBehavior.STOP_SILENTLY;
-            Console.WriteLine(mfb);
-
-            ConfigureItemSub(theItem, type, target);
+            else
+            {
+                ConfigureItemSub(theItem, type, target);
+            }
         }
 
         //this method should only be used by other programmers
@@ -254,6 +255,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
             ConsoleKeyInfo key;
             do
             {
+                Thread.Sleep(conf.DelayMilliSeconds);
                 RenderList2(item2);
                 key = Console.ReadKey();
                 if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.PageUp || key.Key == ConsoleKey.LeftArrow)
@@ -294,6 +296,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
             do
             {
+                Thread.Sleep(conf.DelayMilliSeconds);
+
                 //Console.Clear(); <--- this is problematic, because if [UpArrow] or [LeftArrow] is pressed, we see nothing...
                 //---> the double-buffered console might solve this problem
 
