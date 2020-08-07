@@ -57,6 +57,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected ConsoleColor backColor = ConsoleColor.Black;
         //protected ConsoleColor helpBackColor = ConsoleColor.DarkBlue; //was an idea: help is yellow on dark blue
 
+        protected TestEnum flagsEnum = TestEnum.FirstBlood | TestEnum.FifthElement;
+
         protected List<Item> items = new List<Item>();
 
 
@@ -91,6 +93,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
             items.Add(new Item("PromptColor", "color of that prompt '> '"));
             items.Add(new Item("HelpColor", "color help text (with 'help' or '?')"));
             items.Add(new Item("BackColor", "general background color for console"));
+                items.Add(new Item("FlagsEnum", ""));
         }
 
 
@@ -376,5 +379,12 @@ namespace ZelluSimConsolaz.ConsoleCLI
         }
 
         //TODO: background-color for everything
+
+
+        public TestEnum FlagsEnum
+        {
+            get => FlagsEnum;
+            set { FlagsEnum = value; TryRerender(); }
+        }
     }
 }
