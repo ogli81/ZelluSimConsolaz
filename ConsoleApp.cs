@@ -31,6 +31,8 @@ namespace ZelluSimConsolaz
         protected Random rand = new Random();
         protected bool running = false;
         protected char[] sep = { ' ', '\t', ',' };
+        protected static int paddingX = 1;
+        protected static int paddingY = 4;
 
 
         //c'tors:
@@ -466,7 +468,10 @@ namespace ZelluSimConsolaz
             Console.WriteLine(feedback);
         }
 
-        public void AutoSimLoop()
+
+        //helper methods:
+
+        protected void AutoSimLoop()
         {
             running = true;
             bool vis = Console.CursorVisible;
@@ -487,7 +492,7 @@ namespace ZelluSimConsolaz
             Console.CursorVisible = vis;
         }
 
-        public void ShowHelp()
+        protected void ShowHelp()
         {
             Console.Clear();
             Console.ForegroundColor = conf.HelpColor;
@@ -532,7 +537,7 @@ namespace ZelluSimConsolaz
             SetWindowSize();
         }
 
-        public void ShowSimInfo()
+        protected void ShowSimInfo()
         {
             Console.SetWindowSize(Console.LargestWindowWidth, Console.WindowHeight);
             Console.Clear();
@@ -583,50 +588,64 @@ namespace ZelluSimConsolaz
             SetWindowSize();
         }
 
-        public void FillWith(decimal val)
+        protected void FillWith(decimal val)
         {
             for (int x = 0; x < sim.Settings.SizeX; ++x)
                 for (int y = 0; y < sim.Settings.SizeY; ++y)
                     sim.SetCellValue(x, y, val);
         }
 
-        public void FillWithRandoms(Random r)
+        protected void FillWithRandoms(Random r)
         {
             for (int x = 0; x < sim.Settings.SizeX; ++x)
                 for (int y = 0; y < sim.Settings.SizeY; ++y)
                     sim.SetCellValue(x, y, r.Next(2) == 1 ? 1m : 0m);
         }
 
-        public bool BoundsCheck(int x, int y)
+        protected bool BoundsCheck(int x, int y)
         {
             return x >= 0 && x < sim.Settings.SizeX && y >= 0 && y < sim.Settings.SizeY;
         }
 
-        public void SetWindowSize()
+        protected void SetWindowSize()
         {
-            int paddingX = 4;
-            int paddingY = 4;
+            //TODO:
+            // we have a problem here - the console window can only support 240 x 63 characters (on this machine)
+            // if we set higher values, e.g. for the height of the window, an exception will be thrown :-(
+            // there are ways to make the font smaller with 'unsafe' code:
+            //  https://stackoverflow.com/questions/47014258/c-sharp-modify-console-font-font-size-at-runtime
+            // but maybe we should just prompt the user that a certain maximum can't be exceeded:
+            //  - when editing sim.Settings via the ItemChanger (add parameter 'maxSizeXY', a (int,int) tupel
+            //  - when trying to load a .zsim file (write error-feedback like 'max window size exceeded')
+
             Console.SetWindowSize(
                 conf.TopLeftX + sim.Settings.SizeX + paddingX, 
                 conf.TopLeftY + sim.Settings.SizeY + paddingY
-                );
+            );
         }
 
-        public CliConfig CreateCliConfig()
+        protected (int x, int y) GetMaxSimSize()
+        {
+            (int x, int y) max = ( Console.LargestWindowWidth, Console.LargestWindowHeight );
+            return ( max.x - paddingX - conf.TopLeftX, max.y - paddingY - conf.TopLeftY );
+        }
+
+        protected CliConfig CreateCliConfig()
         {
             CliConfig config = new CliConfig();
             config.DelayMilliSeconds = 20;
             return config;
         }
 
-        public ICellSimulation CreateCellSimulation()
+        protected ICellSimulation CreateCellSimulation()
         {
             //sim = new ClassicSimulation(new SimulationSettings());
 
             SimulationSettings simSettings = new SimulationSettings();
             //simSettings.MemSlots = 4;
             simSettings.MemSlotsGrow = 2;
-            simSettings.MemSlotsMax = int.MaxValue;
+            //simSettings.MemSlotsMax = int.MaxValue; //crazy setting! :-)
+            simSettings.MemSlotsMax = 10000;
             sim = new ClassicSimulation(simSettings);
 
             return sim;
