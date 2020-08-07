@@ -54,6 +54,7 @@ namespace ZelluSimConsolaz
                     FillWithRandoms(rand);
                     conf.App = this;
                     SetWindowSize();
+                    Rerender();
                 }
 
                 if (conf == null)
@@ -61,6 +62,7 @@ namespace ZelluSimConsolaz
                     conf = CreateCliConfig();
                     conf.App = this;
                     SetWindowSize();
+                    Rerender();
                 }
 
                 if (sim == null)
@@ -68,13 +70,16 @@ namespace ZelluSimConsolaz
                     sim = CreateCellSimulation();
                     FillWithRandoms(rand);
                     SetWindowSize();
+                    Rerender();
                 }
 
                 Console.WriteLine();
                 Console.ForegroundColor = conf.PromptColor;
                 Console.Write(conf.PromptText);
                 Console.ForegroundColor = conf.UserColor;
+                Console.CursorVisible = true;
                 command = Console.ReadLine();
+                Console.CursorVisible = false;
 
                 if (command.Equals("default"))
                 {
@@ -84,35 +89,51 @@ namespace ZelluSimConsolaz
                 else
                 if (command.Equals("conf"))
                 {
+                    conf.SuppressRebuildReformat = true; //we may have several changes, will react later
                     ItemsChanger<CliConfig> changer = new ItemsChanger<CliConfig>(conf, conf);
                     changer.MainLoop();
                     SetWindowSize();
-                    feedback = "Left Configuration management.";
+                    conf.SuppressRebuildReformat = false; //now let the console app react to all changes
+                    feedback = "Left configuration management.";
                     feedbackType = FeedbackType.OKAY;
                 }
                 else
                 if (command.Equals("settings"))
                 {
-                    //TODO
-                    //change settings of the simulation (e.g. memory slots or size of the cell field)
+                    sim.Settings.SuppressUpdates = true; //we may have several changes, will react later
+                    ItemsChanger<SimulationSettings> changer = new ItemsChanger<SimulationSettings>(sim.Settings, conf);
+                    changer.MainLoop();
+                    SetWindowSize();
+                    sim.Settings.SuppressUpdates = false; //now let the sim react to all our changes
+                    feedback = "Left settings management.";
+                    feedbackType = FeedbackType.OKAY;
                 }
                 else
                 if (command.Equals("sim"))
                 {
                     //TODO
                     //display a list with all our simulation types
+                    //let user start a new simulation of any of those types
                 }
                 else
-                if (command.StartsWith("save"))
+                if (command.StartsWith("save conf"))
                 {
                     //TODO
-                    //idea: let user select: ui-settings/sim-settings/sim(with sim-settings, optionally with ui-settings too)
                 }
                 else
-                if (command.StartsWith("load"))
+                if (command.StartsWith("save sim"))
                 {
                     //TODO
-                    //idea: let user select: ui-settings/sim-settings/sim(with sim-settings and ui-settings, if available)
+                }
+                else
+                if (command.StartsWith("load conf"))
+                {
+                    //TODO
+                }
+                else
+                if (command.StartsWith("load sim"))
+                {
+                    //TODO
                 }
                 else
                 if (command.StartsWith("random"))
@@ -179,6 +200,7 @@ namespace ZelluSimConsolaz
                         }
                     }
                 }
+                else
                 if (command.StartsWith("set param"))
                 {
                     string[] split = command.Split(sep);
@@ -455,7 +477,7 @@ namespace ZelluSimConsolaz
                 Rerender();
                 Console.ForegroundColor = conf.RunningColor;
                 Console.WriteLine();
-                Console.WriteLine(conf.RunningText);
+                Console.Write(conf.RunningText);
 
                 if(conf.DelayMilliSeconds > 0)
                     Thread.Sleep(conf.DelayMilliSeconds);
@@ -496,8 +518,10 @@ namespace ZelluSimConsolaz
             Console.WriteLine("'conf' - change ui settings."); i++;
             Console.WriteLine("'settings' - change simulation settings."); i++;//TODO
             Console.WriteLine("'sim' - select/configure type of simulation."); i++;//TODO
-            Console.WriteLine("'save' - save settings and/or simulation."); i++;//TODO
-            Console.WriteLine("'load' - load settings and/or simulation."); i++;//TODO
+            Console.WriteLine("'save conf [filename]' - save ui settings."); i++;//TODO
+            Console.WriteLine("'save sim [filename]' - save sim+settings."); i++;//TODO
+            Console.WriteLine("'load conf [filename]' - load ui settings."); i++;//TODO
+            Console.WriteLine("'load sim [filename]' - load sim+settings."); i++;//TODO
             Console.WriteLine("'default' - default settings and simulation."); i++;
             Console.WriteLine("'set param [n] [v] - set nth param to value."); i++;//TODO
             Console.WriteLine(); i++;

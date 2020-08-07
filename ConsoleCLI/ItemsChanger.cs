@@ -22,7 +22,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected CliConfig conf;
         protected int item = 0;
         protected bool edit = false;
-        
+
         /// <summary>
         /// C'tor for our changer. No heavy lifting - can be used many times without problems.
         /// </summary>
@@ -67,15 +67,27 @@ namespace ZelluSimConsolaz.ConsoleCLI
             Console.BackgroundColor = conf.BackColor;
             Console.ForegroundColor = conf.HelpColor;
             Console.Clear();
-            for(int i = 0; i < target.NumItems; ++i)
+            for (int i = 0; i < target.NumItems; ++i)
                 RenderWord(target.GetItem(i), i);
         }
 
         protected void RenderWord(Item it, int index)
         {
             string word = it.Name;
-            Console.ForegroundColor = conf.HelpColor;
-            Console.Write((index == item ? "[" : " ") + word + (index == item ? "]" : " "));
+            if(index == item)
+            {
+                Console.ForegroundColor = conf.PromptColor;
+                Console.Write("[");
+                Console.ForegroundColor = conf.HelpColor;
+                Console.Write(word);
+                Console.ForegroundColor = conf.PromptColor;
+                Console.Write("]");
+            }
+            else
+            {
+                Console.ForegroundColor = conf.HelpColor;
+                Console.Write(" " + word + " ");
+            }
             Console.ForegroundColor = conf.InfoColor;
             Console.WriteLine(" " + it.Info);
         }
@@ -94,10 +106,21 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected void RenderWord2(int index, int item, int longestName)
         {
             Console.BackgroundColor = conf.BackColor;
-            Console.ForegroundColor = conf.HelpColor;
             string word = ColorInfo.GetColorName(index);
-            Console.ForegroundColor = conf.HelpColor;
-            Console.Write((index == item ? "[" : " ") + word + (index == item ? "]" : " "));
+            if(index == item)
+            {
+                Console.ForegroundColor = conf.PromptColor;
+                Console.Write("[");
+                Console.ForegroundColor = conf.HelpColor;
+                Console.Write(word);
+                Console.ForegroundColor = conf.PromptColor;
+                Console.Write("]");
+            }
+            else
+            {
+                Console.ForegroundColor = conf.HelpColor;
+                Console.Write($" {word} ");
+            }
             string arrow = "";
             arrow = arrow.PadRight(longestName - word.Length, '-');
             arrow += "->";
@@ -107,14 +130,50 @@ namespace ZelluSimConsolaz.ConsoleCLI
             Console.WriteLine("  (color looks like this)  ");
         }
 
+        protected void RenderList3(Enum en, int current)
+        {
+            Console.BackgroundColor = conf.BackColor;
+            Console.Clear();
+            string[] names = Enum.GetNames(en.GetType());
+            for (int i = 0; i < names.Length; ++i)
+                RenderWord3(names[i], i, current);
+        }
+
+        protected void RenderWord3(string name, int index, int current)
+        {
+            Console.ForegroundColor = conf.PromptColor;
+            Console.Write(index == current ? "[" : " ");
+            Console.ForegroundColor = conf.HelpColor;
+            Console.Write(name);
+            Console.ForegroundColor = conf.PromptColor;
+            Console.WriteLine(index == current ? "]" : " ");
+        }
+
+        protected void RenderList4(Enum en, long[] currentValues)
+        {
+            //Array vals = Enum.GetValues();
+            //en.HasFlag()
+        }
+
+        protected void RenderWord4(long aValue, string aName, long[] currentValues)
+        {
+
+        }
+
         protected void ConfigureItem(int item, T target)
         {
             Item theItem = GetItem(item);
-            Type type = GetField(theItem.Name).FieldType;
+            Type type = GetProperty(theItem.Name).PropertyType;
 
             if (type == typeof(int))
             {
                 int input = UserEntersInt32(theItem, target);
+                SetItem(theItem, input, target);
+            }
+            else
+            if (type == typeof(decimal))
+            {
+                decimal input = UserEntersDecimal(theItem, target);
                 SetItem(theItem, input, target);
             }
             else
@@ -144,27 +203,19 @@ namespace ZelluSimConsolaz.ConsoleCLI
                     SetItem(theItem, (bool)input, target);
             }
             else
-            if (type == typeof(decimal))
+            if (type.BaseType == typeof(Enum))
             {
-                //TODO: ähnlich wie integer
-            }
-            else
-            if (type == typeof(MemFullBehavior))
-            {
-                //TODO:
-                //'UserEntersEnum'   ----> list of words, user may select one of the words
-                //'UserEntersFlagsEnum' -> [ ] [x] [x] [ ] [x] [ ] (words with checkbox infront of the word)
-            }
-            else
-            if (type == typeof(Enum))
-            {
-                if (typeof(Enum).GetCustomAttributes<FlagsAttribute>().Any())
+                if (type.GetCustomAttributes<FlagsAttribute>().Any()) //tested this: works!
                 {
-                    //UserEntersFlagsEnum
+                    Enum input = UserEntersFlagsEnum(theItem, target);
+                    if (input != null)
+                        SetItem(theItem, (Enum)input, target);
                 }
                 else
                 {
-                    //UserEntersEnum
+                    Enum input = UserEntersEnum(theItem, target);
+                    if (input != null)
+                        SetItem(theItem, (Enum)input, target);
                 }
             }
             else
@@ -183,24 +234,36 @@ namespace ZelluSimConsolaz.ConsoleCLI
         //user selects 'Yes' or 'No' ('On' or 'Off') ('1' or '0) ('Day' or 'Night') ('A' or 'B')
         protected bool? UserEntersBoolean(Item item, T target, string YesStr = "Yes", string NoStr = "No")
         {
-            //TODO:
-            throw new NotImplementedException();
-            //Console.WriteLine();
-            //Console.Write("Select: ");
-            //ConsoleColor was = Console.ForegroundColor;
-            //Console.ForegroundColor = text;
-            //int[] pos = { Console.CursorLeft, Console.CursorTop}; //better do this with tupels
-            //ConsoleKeyInfo key;
-            //bool yes = true;
-            //do
-            //{
-            //    key = Console.ReadKey();
-            //    if(key.Key == ConsoleKey.RightArrow || key.Key == ConsoleKey.DownArrow || key.Key == ConsoleKey.PageDown || key.Key == ConsoleKey.Tab)
-            //}
-            //while (key.Key != ConsoleKey.Escape);
-            //string input = Console.ReadLine();
-            //Console.ForegroundColor = was;
-            //return input;
+            //bool originalBool = GetBool(item, target);
+            Console.WriteLine();
+            Console.Write("Select: ");
+            ConsoleColor was = Console.ForegroundColor;
+            Console.ForegroundColor = conf.PromptColor;
+            int[] pos = { Console.CursorLeft, Console.CursorTop }; //better do this with tupels
+            ConsoleKeyInfo key;
+            bool yes = GetBool(item, target);
+            do
+            {
+                Console.CursorLeft = pos[0];
+                Console.CursorTop = pos[1];
+                Console.WriteLine(yes ?
+                    $"> {YesStr} <   {NoStr}  " :
+                    $"  {YesStr}   > {NoStr} <");
+
+                key = Console.ReadKey();
+                if (key.Key == ConsoleKey.RightArrow || key.Key == ConsoleKey.DownArrow || key.Key == ConsoleKey.PageDown)
+                    yes = yes ? !yes : yes;
+                else
+                if (key.Key == ConsoleKey.LeftArrow || key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.PageUp)
+                    yes = yes ? yes : !yes;
+                else
+                if (key.Key == ConsoleKey.Tab)
+                    yes = !yes;
+            }
+            while (key.Key != ConsoleKey.Escape && key.Key != ConsoleKey.Enter);
+            Console.ForegroundColor = was;
+            //return key.Key == ConsoleKey.Escape ? originalBool : yes;
+            return key.Key == ConsoleKey.Escape ? (bool?) null : (bool?) yes;
         }
 
         //user enters a string - no way to escape the input
@@ -214,7 +277,9 @@ namespace ZelluSimConsolaz.ConsoleCLI
             Console.ForegroundColor = conf.PromptColor;
             Console.Write(conf.PromptText);
             Console.ForegroundColor = conf.UserColor;
+            Console.CursorVisible = true;
             string input = Console.ReadLine();
+            Console.CursorVisible = false;
             Console.ForegroundColor = was;
             return input;
         }
@@ -230,12 +295,83 @@ namespace ZelluSimConsolaz.ConsoleCLI
             Console.ForegroundColor = conf.PromptColor;
             Console.Write(conf.PromptText);
             Console.ForegroundColor = conf.UserColor;
+            Console.CursorVisible = true;
             string str = Console.ReadLine();
+            Console.CursorVisible = false;
             Console.ForegroundColor = was;
             if (int.TryParse(str, out int result))
                 return result;
             else
                 return originalInt;
+        }
+
+        //user enters a int - escape the input with strings that can't be parsed into an int
+        protected decimal UserEntersDecimal(Item item, T target)
+        {
+            decimal originalInt = GetDecimal(item, target);
+            Console.WriteLine();
+            Console.WriteLine($"Original value: {originalInt}");
+            Console.WriteLine("Enter new value: ");
+            ConsoleColor was = Console.ForegroundColor;
+            Console.ForegroundColor = conf.PromptColor;
+            Console.Write(conf.PromptText);
+            Console.ForegroundColor = conf.UserColor;
+            Console.CursorVisible = true;
+            string str = Console.ReadLine();
+            Console.CursorVisible = false;
+            Console.ForegroundColor = was;
+            if (decimal.TryParse(str, out decimal result))
+                return result;
+            else
+                return originalInt;
+        }
+
+        //'UserEntersEnum'   ----> list of words, user may select one of the words
+        protected Enum UserEntersEnum(Item item, T target)
+        {
+            Enum originalEnum = GetEnum<Enum>(item, target);
+            Type enumType = originalEnum.GetType();
+
+            string currentName = originalEnum.ToString();
+            string[] names = Enum.GetNames(enumType);
+            int index = -1;
+            foreach(string name in names)
+            {
+                ++index;
+                if (name.Equals(currentName))
+                    break;
+            }
+
+            ConsoleKeyInfo key;
+            do
+            {
+                Thread.Sleep(conf.DelayMilliSeconds);
+                RenderList3(originalEnum, index);
+                key = Console.ReadKey();
+                if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.PageUp || key.Key == ConsoleKey.LeftArrow)
+                    index = (index == 0) ? names.Length - 1 : index - 1;
+                else
+                if (key.Key == ConsoleKey.DownArrow || key.Key == ConsoleKey.PageDown || key.Key == ConsoleKey.RightArrow)
+                    index = (index == names.Length - 1) ? 0 : index + 1;
+                else
+                if (key.Key == ConsoleKey.Enter)
+                    return (Enum) Enum.ToObject(enumType, Enum.GetValues(enumType).GetValue(index));
+                else
+                if (key.Key == ConsoleKey.Escape)
+                    return null;
+            }
+            while (true);
+        }
+
+        //'UserEntersFlagsEnum' -> [ ] [x] [x] [ ] [x] [ ] (words with checkbox infront of the word)
+        protected Enum UserEntersFlagsEnum(Item item, T target)
+        {
+            Enum originalEnum = GetEnum<Enum>(item, target);
+            Type enumType = originalEnum.GetType();
+
+            //TODO
+
+            return null;
         }
 
         //user selects one of 16 colors - escape with [ESC] key
@@ -287,6 +423,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
             });
             int sel = -1;
 
+            Console.CursorVisible = true;
+
             do
             {
                 Thread.Sleep(conf.DelayMilliSeconds);
@@ -310,7 +448,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
                 Console.ForegroundColor = sel < 0 ? conf.FeedbackColorError : conf.FeedbackColorOkay;
                 Console.Write(str);
                 Console.ForegroundColor = conf.UserColor;
-                
+
                 cul.Clear();
                 foreach (CultureInfo ci in all)
                     if (ci.DisplayName.ToLower().StartsWith(str.ToLower()))
@@ -336,6 +474,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
                 else
                 if (key.Key == ConsoleKey.Enter && sel >= 0)
                 {
+                    Console.CursorVisible = false;
                     return all[sel];
                 }
                 else
@@ -374,6 +513,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
                 else
                 if (key.Key == ConsoleKey.Escape)
                 {
+                    Console.CursorVisible = false;
                     return null;
                 }
                 else
@@ -388,20 +528,19 @@ namespace ZelluSimConsolaz.ConsoleCLI
         }
 
         //you override this method to work with other targets
-        protected virtual FieldInfo GetField(string name) => typeof(T).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);
+        protected virtual PropertyInfo GetProperty(string name) => typeof(T).GetProperty(name);
 
-        //TODO: what if the field is a property? Does it call the code from inside { set; } ???
-        protected void SetItem(Item item, string val, object ob) => GetField(item.Name).SetValue(ob, val);
-        protected void SetItem(Item item, int val, object ob) => GetField(item.Name).SetValue(ob, val);
-        protected void SetItem(Item item, ConsoleColor val, object ob) => GetField(item.Name).SetValue(ob, val);
-        protected void SetItem(Item item, CultureInfo val, object ob) => GetField(item.Name).SetValue(ob, val);
-        protected void SetItem(Item item, bool val, object ob) => GetField(item.Name).SetValue(ob, val);
+        protected void SetItem<V>(Item item, V val, object ob) => GetProperty(item.Name).SetValue(ob, val);
 
-        //TODO: what if the field is a property? Does it call the code from inside { get; } ???
-        protected string GetString(Item item, object ob) => (string)GetField(item.Name).GetValue(ob);
-        protected int GetInt32(Item item, object ob) => (int)GetField(item.Name).GetValue(ob);
-        protected ConsoleColor GetColor(Item item, object ob) => (ConsoleColor)GetField(item.Name).GetValue(ob);
-        protected CultureInfo GetCulture(Item item, object ob) => (CultureInfo)GetField(item.Name).GetValue(ob);
-        protected bool GetBool(Item item, object ob) => (bool)GetField(item.Name).GetValue(ob);
+        protected string GetString(Item item, object ob) => (string)GetProperty(item.Name).GetValue(ob);
+        protected int GetInt32(Item item, object ob) => (int)GetProperty(item.Name).GetValue(ob);
+        protected decimal GetDecimal(Item item, object ob) => (decimal)GetProperty(item.Name).GetValue(ob);
+        protected ConsoleColor GetColor(Item item, object ob) => (ConsoleColor)GetProperty(item.Name).GetValue(ob);
+        protected CultureInfo GetCulture(Item item, object ob) => (CultureInfo)GetProperty(item.Name).GetValue(ob);
+        protected bool GetBool(Item item, object ob) => (bool)GetProperty(item.Name).GetValue(ob);
+        protected E GetEnum<E>(Item item, object ob) where E : Enum
+        {
+            return (E)GetProperty(item.Name).GetValue(ob);
+        }
     }
 }
