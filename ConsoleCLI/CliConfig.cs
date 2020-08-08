@@ -383,8 +383,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         public TestEnum FlagsEnum
         {
-            get => FlagsEnum;
-            set { FlagsEnum = value; TryRerender(); }
+            get => flagsEnum;
+            set { flagsEnum = value; TryRerender(); }
         }
     }
 }

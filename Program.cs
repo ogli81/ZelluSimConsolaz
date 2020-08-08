@@ -1,4 +1,6 @@
 ﻿using System;
+using ZelluSim.Misc;
+using ZelluSimConsolaz.ConsoleCLI;
 
 namespace ZelluSimConsolaz
 {

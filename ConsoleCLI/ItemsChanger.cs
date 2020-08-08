@@ -149,15 +149,48 @@ namespace ZelluSimConsolaz.ConsoleCLI
             Console.WriteLine(index == current ? "]" : " ");
         }
 
-        protected void RenderList4(Enum en, long[] currentValues)
+        protected void RenderList4(EnumFlags flags, int current, int zero)
         {
-            //Array vals = Enum.GetValues();
-            //en.HasFlag()
+            Console.BackgroundColor = conf.BackColor;
+            Console.Clear();
+            for(int i = 0; i < flags.NumValues; ++i)
+            {
+                RenderWord4(flags.GetFlag(i), flags.GetName(i), flags.GetIntValue(i), i, current, zero);
+            }
         }
 
-        protected void RenderWord4(long aValue, string aName, long[] currentValues)
+        protected void RenderWord4(bool isChecked, string name, object bitValue, int index, int current, int zero)
         {
+            if(index == current)
+            {
+                Console.ForegroundColor = conf.PromptColor;
+                Console.Write(">");
+                Console.ForegroundColor = conf.HelpColor;
+            }
+            else
+            {
+                Console.ForegroundColor = conf.HelpColor;
+                Console.Write(" ");
+            }
 
+            if (index == zero)
+                Console.Write("[~]");
+            else
+                Console.Write("[" + (isChecked ? "X]" : " ]"));
+
+            if(index == current)
+            {
+                Console.ForegroundColor = conf.PromptColor;
+                Console.Write("<");
+                Console.ForegroundColor = conf.HelpColor;
+            }
+            else
+            {
+                Console.Write(" ");
+            }
+            Console.Write($"- {name} ");
+            Console.ForegroundColor = conf.InfoColor;
+            Console.WriteLine($" ({bitValue})");
         }
 
         protected void ConfigureItem(int item, T target)
@@ -367,11 +400,48 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected Enum UserEntersFlagsEnum(Item item, T target)
         {
             Enum originalEnum = GetEnum<Enum>(item, target);
-            Type enumType = originalEnum.GetType();
+            EnumFlags flags = new EnumFlags(originalEnum);
 
-            //TODO
+            int index = 0;
+            int zero = -1;
+            for(int i = 0; i < flags.NumValues; ++i)
+                if (flags.IsZero(i))
+                {
+                    zero = i;
+                    break;
+                }
+            ConsoleKeyInfo key;
+            do
+            {
+                Thread.Sleep(conf.DelayMilliSeconds);
+                RenderList4(flags, index, zero);
 
-            return null;
+                key = Console.ReadKey();
+                if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.PageUp || key.Key == ConsoleKey.LeftArrow)
+                    index = (index == 0) ? flags.NumValues - 1 : index - 1;
+                else
+                if (key.Key == ConsoleKey.DownArrow || key.Key == ConsoleKey.PageDown || key.Key == ConsoleKey.RightArrow)
+                    index = (index == flags.NumValues - 1) ? 0 : index + 1;
+                else
+                if (key.Key == ConsoleKey.Enter || key.Key == ConsoleKey.Spacebar)
+                {
+                    if (index == zero)
+                    {
+                        if (flags.HasAnySet(true))
+                            flags.SetAllFlags(false);
+                        else
+                            flags.SetAllFlags(true);
+                    }
+                    else
+                    {
+                        flags.SetFlag(index, !flags.GetFlag(index));
+                    }
+                }
+                else
+                if (key.Key == ConsoleKey.Escape)
+                    return flags.Create();
+            }
+            while (true);
         }
 
         //user selects one of 16 colors - escape with [ESC] key
