@@ -95,6 +95,9 @@ namespace ZelluSimConsolaz
                     ItemsChanger<CliConfig> changer = new ItemsChanger<CliConfig>(conf, conf);
                     changer.MainLoop();
                     SetWindowSize();
+                    confStr1 = null; //AlifeText may have changed
+                    confStr2 = null; //HalfAlifeText may have changed
+                    confStr3 = null; //DeadText may have changed
                     conf.SuppressRebuildReformat = false; //now let the console app react to all changes
                     feedback = "Left configuration management.";
                     feedbackType = FeedbackType.OKAY;
@@ -436,18 +439,18 @@ namespace ZelluSimConsolaz
                     if (val <= 0m)
                     {
                         Console.ForegroundColor = conf.DeadColor;
-                        Console.Write(conf.DeadText);
+                        Console.Write(DeadText);
                     }
                     else
                     if (val >= 1m)
                     {
                         Console.ForegroundColor = conf.AlifeColor;
-                        Console.Write(conf.AlifeText);
+                        Console.Write(AlifeText);
                     }
                     else
                     {
                         Console.ForegroundColor = conf.HalfAlifeColor;
-                        Console.Write(conf.HalfAlifeText);
+                        Console.Write(HalfAlifeText);
                     }
                 }
                 Console.WriteLine();
@@ -521,7 +524,7 @@ namespace ZelluSimConsolaz
             Console.WriteLine("'random' - fill every cell with random."); i++;
             Console.WriteLine("'random [s]' - fill with random (s = seed)."); i++;
             Console.WriteLine("'conf' - change ui settings."); i++;
-            Console.WriteLine("'settings' - change simulation settings."); i++;//TODO
+            Console.WriteLine("'settings' - change simulation settings."); i++;
             Console.WriteLine("'sim' - select/configure type of simulation."); i++;//TODO
             Console.WriteLine("'save conf [filename]' - save ui settings."); i++;//TODO
             Console.WriteLine("'save sim [filename]' - save sim+settings."); i++;//TODO
@@ -624,11 +627,85 @@ namespace ZelluSimConsolaz
             );
         }
 
+        protected int CellTextLength
+        {
+            get
+            {
+                int len = 0;
+                len = Math.Max(conf.AlifeText.Length, len);
+                len = Math.Max(conf.DeadText.Length, len);
+                len = Math.Max(conf.HalfAlifeText.Length, len);
+                len = Math.Max(len, 1);
+                len = Math.Min(len, 8);
+                return len;
+            }
+        }
+
+        protected string confStr1 = null;
+        protected string confStr2 = null;
+        protected string confStr3 = null;
+
+        protected string adjuStr1 = null;
+        protected string adjuStr2 = null;
+        protected string adjuStr3 = null;
+
+        protected string EnsureString(in string what, ref string confStr, ref string adjuStr)
+        {
+            if (what.Equals(confStr))
+                return adjuStr;
+            int len = CellTextLength;
+            confStr = what;
+            if (confStr.Length < len)
+                adjuStr = confStr.PadRight(len, ' ');
+            else
+            if (what.Length >= len) //may have more than 8 characters
+                adjuStr = confStr.Substring(0, len);
+            return adjuStr;
+        }
+
+        protected string AlifeText => EnsureString(conf.AlifeText, ref confStr1, ref adjuStr1);
+        protected string HalfAlifeText => EnsureString(conf.HalfAlifeText, ref confStr2, ref adjuStr2);
+        protected string DeadText => EnsureString(conf.DeadText, ref confStr3, ref adjuStr3);
+
+        //protected string AlifeText
+        //{
+        //    get
+        //    {
+        //        if (conf.AlifeText.Equals(confStr1))
+        //            return adjuStr1;
+        //        int len = CellTextLength;
+        //        if (conf.AlifeText.Length < len)
+        //            adjuStr1 = conf.AlifeText.PadRight(len - conf.AlifeText.Length, ' ');
+        //        else
+        //        if (conf.AlifeText.Length >= len) //may have more than 8 characters
+        //            adjuStr1 = conf.AlifeText.Substring(0, len);
+        //        confStr1 = conf.AlifeText;
+        //        return adjuStr1;
+        //    }
+        //}
+
+        //TODO: render a zoomed version if simulation is bigger
+        //TODO: how can we do this???
+        //idea: https://www.google.com/search?q=C%23+convert+image+to+ascii+art
+        //      - https://www.codeproject.com/Articles/20435/Using-C-To-Generate-ASCII-Art-From-An-Image
+        //      - https://www.c-sharpcorner.com/article/generating-ascii-art-from-an-image-using-C-Sharp/
         protected (int x, int y) GetMaxSimSize()
         {
             (int x, int y) max = ( Console.LargestWindowWidth, Console.LargestWindowHeight );
-            return ( max.x - paddingX - conf.TopLeftX, max.y - paddingY - conf.TopLeftY );
+            max = ( max.x - paddingX - conf.TopLeftX, max.y - paddingY - conf.TopLeftY );
+            max.x /= CellTextLength;
+            return max;
         }
+        //this doesn't make much sense:
+        //protected (int x, int y) GetMaxConfSize()
+        //{
+        //    (int x, int y) max = ( Console.LargestWindowWidth, Console.LargestWindowHeight );
+        //    max = ( max.x - paddingX - sim.Settings.SizeX, max.y - paddingY - sim.Settings.SizeY );
+        //    return max;
+        //}
+
+        //TODO: render a line and a number like this:
+        //[avg = 0.872] (0|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||      1)
 
         protected CliConfig CreateCliConfig()
         {
