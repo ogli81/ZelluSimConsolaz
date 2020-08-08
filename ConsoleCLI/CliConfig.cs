@@ -106,7 +106,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
                 return;
             if (suppress)
                 return;
-            app.Rerender(); //TODO: use proper C# event 'RequestReformat'
+            app.Rerender(); //TODO: use proper C# event 'FormatChanged'
             reformatNeeded = false;
         }
 
