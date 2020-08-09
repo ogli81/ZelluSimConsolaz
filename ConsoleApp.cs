@@ -75,7 +75,7 @@ namespace ZelluSimConsolaz
                     Rerender();
                 }
 
-                Console.WriteLine();
+                //Console.WriteLine();
                 Console.ForegroundColor = conf.PromptColor;
                 Console.Write(conf.PromptText);
                 Console.ForegroundColor = conf.UserColor;
@@ -463,6 +463,21 @@ namespace ZelluSimConsolaz
             //Console.WriteLine(conf.GenerationText, sim.CurrentGen.ToString(conf.GenerationTextCulture));
             Console.WriteLine(string.Format(conf.GenerationTextCulture, conf.GenerationText, sim.CurrentGen));
 
+            //render a line and a number like this:
+            //[avg = 0.872] (0|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||      1)
+            //TODO: let user edit the character - ItemsChanger.UserEntersCharacter
+            string str1 = "[avg = {0:0.000}] (0";
+            string str3 = "1)";
+            string str2 = "";
+            decimal avg = sim.GetAverageCellValue();
+            str1 = string.Format(conf.GenerationTextCulture, str1, avg);
+            int len = Console.WindowWidth - str1.Length - str3.Length - 1;
+            int num = (int)(avg * ((decimal)len));
+            str2 = str2.PadRight(num, '|');
+            str2 = str2.PadRight(len, ' ');
+            Console.ForegroundColor = conf.InfoColor;
+            Console.WriteLine(str1 + str2 + str3);
+
             switch (feedbackType)
             {
                 case FeedbackType.OKAY:  Console.ForegroundColor = conf.FeedbackColorOkay; break;
@@ -484,7 +499,7 @@ namespace ZelluSimConsolaz
                 sim.CalculateNextGen();
                 Rerender();
                 Console.ForegroundColor = conf.RunningColor;
-                Console.WriteLine();
+                //Console.WriteLine();
                 Console.Write(conf.RunningText);
 
                 if(conf.DelayMilliSeconds > 0)
@@ -620,11 +635,16 @@ namespace ZelluSimConsolaz
             // but maybe we should just prompt the user that a certain maximum can't be exceeded:
             //  - when editing sim.Settings via the ItemChanger (add parameter 'maxSizeXY', a (int,int) tupel
             //  - when trying to load a .zsim file (write error-feedback like 'max window size exceeded')
+            // our newest idea to circumvent this problem:
+            //  - render a "zoomed view", using ASCII graphics and a mapping function
 
-            Console.SetWindowSize(
-                conf.TopLeftX + sim.Settings.SizeX + paddingX, 
-                conf.TopLeftY + sim.Settings.SizeY + paddingY
-            );
+            int width = conf.TopLeftX + sim.Settings.SizeX + paddingX;
+            int height = conf.TopLeftY + sim.Settings.SizeY + paddingY;
+
+            //adjust width so that most of our feedback messages fit well into the window:
+            width = Math.Max(width, 64);
+
+            Console.SetWindowSize(width, height);
         }
 
         protected int CellTextLength
@@ -703,9 +723,6 @@ namespace ZelluSimConsolaz
         //    max = ( max.x - paddingX - sim.Settings.SizeX, max.y - paddingY - sim.Settings.SizeY );
         //    return max;
         //}
-
-        //TODO: render a line and a number like this:
-        //[avg = 0.872] (0|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||      1)
 
         protected CliConfig CreateCliConfig()
         {

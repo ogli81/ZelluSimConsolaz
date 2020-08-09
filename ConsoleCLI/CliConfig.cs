@@ -45,7 +45,7 @@ namespace ZelluSimConsolaz.ConsoleCLI
         //protected string generationText = "generation: {0,0.0}";
         protected string generationText = "generation: {0:#,0}";
         protected CultureInfo generationTextCulture = CultureInfo.InvariantCulture;
-        protected ConsoleColor generationTextColor = ConsoleColor.Blue;
+        protected ConsoleColor generationTextColor = ConsoleColor.Magenta;
 
         protected string promptText = "> ";
         protected ConsoleColor promptColor = ConsoleColor.White;
