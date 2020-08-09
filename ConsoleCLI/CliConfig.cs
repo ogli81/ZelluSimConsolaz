@@ -46,6 +46,8 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected string generationText = "generation: {0:#,0}";
         protected CultureInfo generationTextCulture = CultureInfo.InvariantCulture;
         protected ConsoleColor generationTextColor = ConsoleColor.Magenta;
+        protected string averageBarText = "avg = {0:0.000}";
+        protected ConsoleColor averageBarColor = ConsoleColor.Yellow;
 
         protected string promptText = "> ";
         protected ConsoleColor promptColor = ConsoleColor.White;
@@ -88,7 +90,9 @@ namespace ZelluSimConsolaz.ConsoleCLI
             items.Add(new Item("FeedbackColorError", "color for failed commands"));
             items.Add(new Item("GenerationText", "a code like: 'gen: {0:#,0}'"));
             items.Add(new Item("GenerationTextCulture", "how are numbers written?"));
-            items.Add(new Item("GenerationTextColor", "color for 'generationText'"));
+            items.Add(new Item("GenerationTextColor", "color for 'GenerationText'"));
+            items.Add(new Item("AverageBarText", "a code like 'avg = {0:0.000}'"));
+            items.Add(new Item("AverageBarColor", "color for 'AverageBarText'"));
             items.Add(new Item("PromptText", "a prompt for user input like '> '"));
             items.Add(new Item("PromptColor", "color of that prompt '> '"));
             items.Add(new Item("HelpColor", "color help text (with 'help' or '?')"));
@@ -302,6 +306,26 @@ namespace ZelluSimConsolaz.ConsoleCLI
         {
             get => generationTextColor;
             set { generationTextColor = value; TryRerender(); }
+        }
+        
+        /// <summary>
+        /// This formatting string will be used to display the information "what's the overall average cell value?". 
+        /// The string will be used with 'String.Format()'. It is expected to receive one value of type decimal.
+        /// That value is supposed to be from the interval [0.000 .. 1.000] ("between zero and one").
+        /// </summary>
+        public string AverageBarText
+        {
+            get => averageBarText;
+            set { averageBarText = value; TryRerender(); }
+        }
+
+        /// <summary>
+        /// We display this color, when showing the current overall average cell value.
+        /// </summary>
+        public ConsoleColor AverageBarColor
+        {
+            get => averageBarColor;
+            set { averageBarColor = value; TryRerender(); }
         }
 
         /// <summary>

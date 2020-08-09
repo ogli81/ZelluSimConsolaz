@@ -466,7 +466,7 @@ namespace ZelluSimConsolaz
             //render a line and a number like this:
             //[avg = 0.872] (0|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||      1)
             //TODO: let user edit the character - ItemsChanger.UserEntersCharacter
-            string str1 = "[avg = {0:0.000}] (0";
+            string str1 = "["+conf.AverageBarText+"] (0";
             string str3 = "1)";
             string str2 = "";
             decimal avg = sim.GetAverageCellValue();
@@ -475,7 +475,7 @@ namespace ZelluSimConsolaz
             int num = (int)(avg * ((decimal)len));
             str2 = str2.PadRight(num, '|');
             str2 = str2.PadRight(len, ' ');
-            Console.ForegroundColor = conf.InfoColor;
+            Console.ForegroundColor = conf.AverageBarColor;
             Console.WriteLine(str1 + str2 + str3);
 
             switch (feedbackType)
