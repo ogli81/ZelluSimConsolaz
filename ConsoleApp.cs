@@ -746,31 +746,6 @@ namespace ZelluSimConsolaz
             CliConfig config = new CliConfig();
             //config.DelayMilliSeconds = 20;
 
-            //TODO: 
-            //config.RegisterMapperFunction(new LinearMapper(), { "linear", "lin" }); //1st ---> will be the default mapper
-            //config.RegisterMapperFunction(new LogarithmicMapper(), { "logarithmic", "log" });
-            //config.RegisterMapperFunction(new SqrtMapper(), { "sqrt", "root" });
-            //config.RegisterMapperFunction(new CustomMapper(), { "custom", "points" });
-
-            //TODO:
-            //config.RegisterAsciiArtScale( 
-            // { "codeproject", "default", "standard" }, 
-            // { 230, 200, 180, 160, 130, 100, 70, 50 }, 
-            // { ' ', '.', '*', ':', 'o', '&', '8', '#', '@' }, 
-            // new Uri("https://www.codeproject.com/Articles/20435/Using-C-To-Generate-ASCII-Art-From-An-Image")
-            //);
-            //config.RegisterAsciiArtScale(
-            // { "c-sharpcorner", "alternative" }, 
-            // { 0.90197m, 0.8m, 0.70197m, 0.6m, 0.50197m, 0.4m, 0.30197m, 0.2m, 0.10197m }, 
-            // { ' ', '.', '-', ':', '*', '+', '=', '%', '@', '#' }, 
-            // new Uri("https://www.c-sharpcorner.com/article/generating-ascii-art-from-an-image-using-C-Sharp/")
-            //);
-            //config.RegisterAsciiArtScale(
-            // { "auto-example", "auto", "automatic" },
-            // "##@%=+*:-. ",
-            // new Uri("https://www.c-sharpcorner.com/article/generating-ascii-art-from-an-image-using-C-Sharp/")
-            //);
-
             return config;
         }
 

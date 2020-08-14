@@ -437,6 +437,42 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         //TODO: background-color for everything
 
+        /// <summary>
+        /// When observing the overall average life of a cell field we discovered
+        /// that values start with 0.5 and quickly drop below 0.1 and some time
+        /// later even further down. Since the "interesting numbers" are all in 
+        /// that lower region, we introduced a "mapper function" mechanism. The 
+        /// idea is simple: Push small numbers up (similar to a "gamma correction"
+        /// that many gamers know).<br></br>
+        /// Should always have a "current object" and should "not be empty". 
+        /// See <see cref="ObjectsWithIDs{I, O}.CurrentObject"/> and 
+        /// <see cref="ObjectsWithIDs{I, O}.CanBeEmpty"/>. You can assign this
+        /// property to itself (which will trigger a rerendering of the UI.
+        /// </summary>
+        public NamedObjects<IDecimalMapper> Mappers
+        {
+            get => mappers;
+            set { mappers = value; TryRerender(); }
+        }
+
+        /// <summary>
+        /// When rendering a zoomed view, we use an "ASCII art" mechanism: 
+        /// The average life value of multiple cells will be computed and then
+        /// we render that as ASCII art.<br></br>
+        /// Should always have a "current object" and should "not be empty".
+        /// See <see cref="ObjectsWithIDs{I, O}.CurrentObject"/> and 
+        /// <see cref="ObjectsWithIDs{I, O}.CanBeEmpty"/>. You can assign this
+        /// property to itself (which will trigger a rerendering of the UI.
+        /// </summary>
+        public NamedObjects<IAsciiArtScale> Scales
+        {
+            get => scales;
+            set { scales = value; TryRerender(); }
+        }
+
+        /// <summary>
+        /// This is just for testing purposes (it's a pure dummy something).
+        /// </summary>
         public TestEnum FlagsEnum
         {
             get => flagsEnum;
