@@ -427,38 +427,93 @@ namespace ZelluSimConsolaz
             for (int i = 0; i < conf.TopLeftY; ++i)
                 Console.WriteLine();
 
-            decimal val;
-            for (int y = 0; y < sim.Settings.SizeY; ++y)
-            {
-                //Console.BackgroundColor = conf.BackColor; (flickers too much => need double buffering / batch-flush)
-                //---> https://github.com/microsoftarchive/msdn-code-gallery-community-a-c/tree/master/C%23%20Console%20Double%20Buffer
+            (int x, int y) zoom = CalculateIdealZoom();
 
+            if (zoom.x == 1 && zoom.y == 1) //no zoom
+            {
+                decimal val;
+                for (int y = 0; y < sim.Settings.SizeY; ++y)
+                {
+                    //Console.BackgroundColor = conf.BackColor; (flickers too much => need double buffering / batch-flush)
+                    //---> https://github.com/microsoftarchive/msdn-code-gallery-community-a-c/tree/master/C%23%20Console%20Double%20Buffer
+
+                    for (int j = 0; j < conf.TopLeftX; ++j)
+                        Console.Write(" ");
+
+                    //Console.BackgroundColor = ConsoleColor.Yellow; (flickers too much => need double buffering / batch-flush)
+                    //---> https://github.com/microsoftarchive/msdn-code-gallery-community-a-c/tree/master/C%23%20Console%20Double%20Buffer
+
+                    for (int x = 0; x < sim.Settings.SizeX; ++x)
+                    {
+                        val = sim.GetCellValue(x, y);
+                        if (val <= 0m)
+                        {
+                            Console.ForegroundColor = conf.DeadColor;
+                            Console.Write(DeadText);
+                        }
+                        else
+                        if (val > 0.5m)
+                        {
+                            Console.ForegroundColor = conf.AlifeColor;
+                            Console.Write(AlifeText);
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = conf.HalfAlifeColor;
+                            Console.Write(HalfAlifeText);
+                        }
+                    }
+                    Console.WriteLine();
+                }
+            }
+            else //we have a zoomed view (each character on screen represents multiple values)
+            {
                 for (int j = 0; j < conf.TopLeftX; ++j)
                     Console.Write(" ");
 
-                //Console.BackgroundColor = ConsoleColor.Yellow; (flickers too much => need double buffering / batch-flush)
-                //---> https://github.com/microsoftarchive/msdn-code-gallery-community-a-c/tree/master/C%23%20Console%20Double%20Buffer
+                int topX = Console.CursorLeft;
+                int topY = Console.CursorTop;
 
-                for (int x = 0; x < sim.Settings.SizeX; ++x)
-                {
-                    val = sim.GetCellValue(x, y);
-                    if (val <= 0m)
+                int simX = sim.Settings.SizeX;
+                int simY = sim.Settings.SizeY;
+
+                decimal sum, numCells, clusterAvg, mappedAvg;
+                char asciiChar;
+
+                for(int x = 0, cX = 0; x < simX; x += zoom.x, ++cX)
+                    for(int y = 0, cY = 0; y < simY; y += zoom.y, ++cY)
                     {
-                        Console.ForegroundColor = conf.DeadColor;
-                        Console.Write(DeadText);
+                        clusterAvg = sum = numCells = 0m;
+                        for(int i = x; i < (x + zoom.x) && i < simX; ++i)
+                            for(int j = y; j < (y + zoom.y) && j < simY; ++j)
+                            {
+                                numCells++;
+                                sum += sim.GetCellValue(i, j);
+                            }
+                        clusterAvg = sum / numCells;
+
+                        mappedAvg = conf.Mappers.CurrentObject.GetValue(clusterAvg); //hope that no number instabilities are happening
+
+                        asciiChar = conf.Scales.CurrentObject.GetChar(mappedAvg);
+
+                        if (mappedAvg <= 0m)
+                        {
+                            Console.ForegroundColor = conf.DeadColor;
+                        }
+                        else
+                        if (mappedAvg > 0.5m)
+                        {
+                            Console.ForegroundColor = conf.AlifeColor;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = conf.HalfAlifeColor;
+                        }
+
+                        Console.SetCursorPosition(topX + cX, topY + cY);
+                        Console.Write(asciiChar);
                     }
-                    else
-                    if (val >= 1m)
-                    {
-                        Console.ForegroundColor = conf.AlifeColor;
-                        Console.Write(AlifeText);
-                    }
-                    else
-                    {
-                        Console.ForegroundColor = conf.HalfAlifeColor;
-                        Console.Write(HalfAlifeText);
-                    }
-                }
+
                 Console.WriteLine();
             }
 
@@ -647,8 +702,10 @@ namespace ZelluSimConsolaz
             // our newest idea to circumvent this problem:
             //  - render a "zoomed view", using ASCII graphics and a mapping function
 
-            int width = conf.TopLeftX + sim.Settings.SizeX + paddingX;
-            int height = conf.TopLeftY + sim.Settings.SizeY + paddingY;
+            (int x, int y) zoom = CalculateIdealZoom();
+
+            int width = conf.TopLeftX + (sim.Settings.SizeX / zoom.x) + paddingX;
+            int height = conf.TopLeftY + (sim.Settings.SizeY / zoom.y) + paddingY;
 
             //adjust width so that most of our feedback messages fit well into the window:
             width = Math.Max(width, 64);
@@ -658,8 +715,8 @@ namespace ZelluSimConsolaz
 
         #region string length and rendering size
 
-        protected const int minStrLen = 1;
-        protected const int maxStrLenStart = 128;
+        protected const int minStrLen = 1; //usually we prefer 2, but 1 is possible (without starting zoom)
+        protected const int maxStrLenStart = 32;
         protected int maxStrLen = maxStrLenStart;
 
         protected int CellTextLength
@@ -739,6 +796,103 @@ namespace ZelluSimConsolaz
         //    return max;
         //}
 
+        protected (int x, int y) CalculateIdealZoom(bool compensateVerticalStretch = true, bool squarify = false)
+        {
+            int simX = sim.Settings.SizeX;
+            int simY = sim.Settings.SizeY;
+            maxStrLen = maxStrLenStart;
+            (int x, int y) max = GetMaxSimSize();
+            
+            if(max.y >= simY && max.x >= simX)
+            {
+                return (1, 1); //no zoom (a cell is 1 char wide and 1 char high)
+            }
+
+            if(max.y >= simY && max.x < simX)
+            {
+                //first: try to reduce width of strings
+                while(maxStrLen > 1)
+                {
+                    --maxStrLen;
+                    max = GetMaxSimSize();
+                    if (max.x >= simX)
+                        return (1, 1); //string length reduced => now it fits
+                }
+                //we have failed with this strategy.
+            }
+
+            //now we must scale down (zoom)
+            maxStrLen = 1; //our ASCII art will use one character for each cell
+            max = GetMaxSimSize();
+            int zX, zY;
+
+            if (squarify) //special operation to make sim look like a square (even if its original is a rectangle)
+            {
+                if (simX > simY)
+                {
+                    zY = 1;
+                    zX = (int)Math.Ceiling(((decimal)max.x) / ((decimal)max.y));
+                    //example:
+                    //simX = 550;
+                    //simY = 100;
+                    //result: zX = 6, zY = 1
+                    //meaning: one cell will show 6x1 of the original cells (won't happen, but now we know the ratio)
+                }
+                else
+                {
+                    zX = 1;
+                    zY = (int)Math.Ceiling(((decimal)max.y) / ((decimal)max.x));
+                    //example:
+                    //simX = 500
+                    //simY = 500
+                    //result: zX = 1, zY = 1
+                    //meaning: one cell will show 1x1 of the original cells (won't happen, but now we know the ratio)
+                }
+            }
+            else
+            {
+                zX = 1;
+                zY = 1;
+            }
+
+            if (compensateVerticalStretch)
+                zY *= 2; //"skip" every second line (e.g. a ratio of 1:1 will turn into a ratio of 1:2)
+
+            ////first idea:
+            //while((max.x < (simX / zX)) || (max.y < (simY / zY)))
+            //{
+            //    zX *= 2; 
+            //    zY *= 2;
+            //}
+
+            ////second idea: use different factor (like 1.1)
+            //we would need to use a different data type (e.g. decimal or double)
+
+            ////third idea: calculate via formula:
+            //
+            //max.x = simX / (zX * f1)
+            //f1 = simX / (zX * max.x)
+            //
+            //max.y = simY / (zY * f2)
+            //f2 = simY / (zY * max.y)
+            //
+            //f = Math.Max(f1, f2)
+            //
+            //zX = Math.Ceil(f * zX)
+            //zY = Math.Ceil(f * zY)
+            //okay, let's do this:
+            decimal f1 = ((decimal)simX) / ((decimal)(zX * max.x));
+            decimal f2 = ((decimal)simY) / ((decimal)(zY * max.y));
+            decimal f = Math.Max(f1, f2);
+            zX = (int)Math.Ceiling(f * zX);
+            zY = (int)Math.Ceiling(f * zY);
+
+            zX = Math.Min(simX, zX); // zX can't be bigger than simX (would probably work okay even if we wouldn't fix this)
+            zY = Math.Min(simY, zY); // zY can't be bigger than simY (would probably work okay even if we wouldn't fix this)
+
+            return (zX, zY);
+        }
+
         #endregion
 
         protected CliConfig CreateCliConfig()
@@ -754,6 +908,8 @@ namespace ZelluSimConsolaz
             //sim = new ClassicSimulation(new SimulationSettings());
 
             SimulationSettings simSettings = new SimulationSettings();
+            simSettings.SizeX = 128; //TODO: currently a bug leads to a crash when trying to set via "size [x] [y]" - investigate!
+            simSettings.SizeY = 128;
             //simSettings.MemSlots = 4;
             simSettings.MemSlotsGrow = 2;
             //simSettings.MemSlotsMax = int.MaxValue; //crazy setting! :-)

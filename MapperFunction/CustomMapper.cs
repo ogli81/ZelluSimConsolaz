@@ -50,7 +50,7 @@ namespace ZelluSimConsolaz.MapperFunction
                 throw new ArgumentException("must be sorted ascending!");
             if (sortedValues[0] != 0m)
                 throw new ArgumentException("first value should be zero!");
-            if (sortedValues[1] != 1m)
+            if (sortedValues[sortedValues.Length - 1] != 1m)
                 throw new ArgumentException("last value should be one!");
             for (int i = 0; i < sortedValues.Length - 1; ++i)
                 if (sortedValues[i] == sortedValues[i + 1])
