@@ -180,7 +180,7 @@ namespace ZelluSimConsolaz
                     feedbackType = FeedbackType.OKAY;
                 }
                 else
-                if (command.StartsWith("set size"))
+                if (command.StartsWith("size"))
                 {
                     string[] split = command.Split(sep);
                     if (split.Length > 2)
@@ -206,7 +206,7 @@ namespace ZelluSimConsolaz
                     }
                 }
                 else
-                if (command.StartsWith("set param"))
+                if (command.StartsWith("param"))
                 {
                     string[] split = command.Split(sep);
                     if(split.Length > 3)
@@ -398,6 +398,12 @@ namespace ZelluSimConsolaz
                     ShowHelp();
                 }
                 else
+                if (command.Equals("max"))
+                {
+                    feedback = "max size: " + GetMaxSimSize();
+                    feedbackType = FeedbackType.OKAY;
+                }
+                else
                 {
                     feedback = "Unknown command: \"" + command + "\"";
                     feedbackType = FeedbackType.ERROR;
@@ -530,14 +536,18 @@ namespace ZelluSimConsolaz
             Console.WriteLine("'current?' - what's the current gen?"); i++;
             Console.WriteLine("'next' - go to the next gen."); i++;
             Console.WriteLine("'clear' - set every cell to lowest value."); i++;
-            Console.WriteLine("'clear [x] [y]' - set cell to lowest value."); i++;
             Console.WriteLine("'fill' - set every cell to highest value."); i++;
-            Console.WriteLine("'set size [w] [h]' - resize width/height."); i++;
-            Console.WriteLine("'set [x] [y] - set cell to highest value."); i++;
-            Console.WriteLine("'set [x] [y] [v] - set cell to value."); i++;
-            Console.WriteLine("'run' - start auto-compute (end: [ESC])."); i++;
             Console.WriteLine("'random' - fill every cell with random."); i++;
             Console.WriteLine("'random [s]' - fill with random (s = seed)."); i++;
+            Console.WriteLine("'clear [x] [y]' - set cell to lowest value."); i++;
+            Console.WriteLine("'set [x] [y] - set cell to highest value."); i++;
+            Console.WriteLine("'set [x] [y] [v] - set cell to value."); i++;
+            Console.WriteLine("'size [d]' - new dimension: d x d."); i++;
+            Console.WriteLine("'size [w] [h]' - resize: width x height."); i++;
+            Console.WriteLine("'param [n] [v] - set nth param to value."); i++;//TODO
+            Console.WriteLine("'mapping [name] (params) - configure mapping."); i++;//TODO
+            Console.WriteLine("'scale [name] - configure zoomed view."); i++;//TODO
+            Console.WriteLine("'run' - start auto-compute (end: [ESC])."); i++;
             Console.WriteLine("'conf' - change ui settings."); i++;
             Console.WriteLine("'settings' - change simulation settings."); i++;
             Console.WriteLine("'sim' - select/configure type of simulation."); i++;//TODO
@@ -546,7 +556,6 @@ namespace ZelluSimConsolaz
             Console.WriteLine("'load conf [filename]' - load ui settings."); i++;//TODO
             Console.WriteLine("'load sim [filename]' - load sim+settings."); i++;//TODO
             Console.WriteLine("'default' - default settings and simulation."); i++;
-            Console.WriteLine("'set param [n] [v] - set nth param to value."); i++;//TODO
             Console.WriteLine(); i++;
             Console.WindowHeight = i + 2;
             Console.WindowWidth = 60;
@@ -647,6 +656,12 @@ namespace ZelluSimConsolaz
             Console.SetWindowSize(width, height);
         }
 
+        #region string length and rendering size
+
+        protected const int minStrLen = 1;
+        protected const int maxStrLenStart = 128;
+        protected int maxStrLen = maxStrLenStart;
+
         protected int CellTextLength
         {
             get
@@ -655,8 +670,8 @@ namespace ZelluSimConsolaz
                 len = Math.Max(conf.AlifeText.Length, len);
                 len = Math.Max(conf.DeadText.Length, len);
                 len = Math.Max(conf.HalfAlifeText.Length, len);
-                len = Math.Max(len, 1);
-                len = Math.Min(len, 8);
+                len = Math.Max(len, minStrLen);
+                len = Math.Min(len, maxStrLen);
                 return len;
             }
         }
@@ -678,7 +693,7 @@ namespace ZelluSimConsolaz
             if (confStr.Length < len)
                 adjuStr = confStr.PadRight(len, ' ');
             else
-            if (what.Length >= len) //may have more than 8 characters
+            if (what.Length >= len)
                 adjuStr = confStr.Substring(0, len);
             return adjuStr;
         }
@@ -724,10 +739,38 @@ namespace ZelluSimConsolaz
         //    return max;
         //}
 
+        #endregion
+
         protected CliConfig CreateCliConfig()
         {
             CliConfig config = new CliConfig();
-            config.DelayMilliSeconds = 20;
+            //config.DelayMilliSeconds = 20;
+
+            //TODO: 
+            //config.RegisterMapperFunction(new LinearMapper(), { "linear", "lin" }); //1st ---> will be the default mapper
+            //config.RegisterMapperFunction(new LogarithmicMapper(), { "logarithmic", "log" });
+            //config.RegisterMapperFunction(new SqrtMapper(), { "sqrt", "root" });
+            //config.RegisterMapperFunction(new CustomMapper(), { "custom", "points" });
+
+            //TODO:
+            //config.RegisterAsciiArtScale( 
+            // { "codeproject", "default", "standard" }, 
+            // { 230, 200, 180, 160, 130, 100, 70, 50 }, 
+            // { ' ', '.', '*', ':', 'o', '&', '8', '#', '@' }, 
+            // new Uri("https://www.codeproject.com/Articles/20435/Using-C-To-Generate-ASCII-Art-From-An-Image")
+            //);
+            //config.RegisterAsciiArtScale(
+            // { "c-sharpcorner", "alternative" }, 
+            // { 0.90197m, 0.8m, 0.70197m, 0.6m, 0.50197m, 0.4m, 0.30197m, 0.2m, 0.10197m }, 
+            // { ' ', '.', '-', ':', '*', '+', '=', '%', '@', '#' }, 
+            // new Uri("https://www.c-sharpcorner.com/article/generating-ascii-art-from-an-image-using-C-Sharp/")
+            //);
+            //config.RegisterAsciiArtScale(
+            // { "auto-example", "auto", "automatic" },
+            // "##@%=+*:-. ",
+            // new Uri("https://www.c-sharpcorner.com/article/generating-ascii-art-from-an-image-using-C-Sharp/")
+            //);
+
             return config;
         }
 

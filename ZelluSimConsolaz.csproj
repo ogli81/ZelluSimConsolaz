@@ -46,17 +46,26 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsciiArtZoom\AutomaticScale.cs" />
+    <Compile Include="AsciiArtZoom\IAsciiArtScale.cs" />
+    <Compile Include="AsciiArtZoom\ThresholdScale.cs" />
     <Compile Include="ConsoleApp.cs" />
     <Compile Include="ConsoleCLI\ColorInfo.cs" />
     <Compile Include="ConsoleCLI\CliConfig.cs" />
     <Compile Include="ConsoleCLI\ItemsChanger.cs" />
     <Compile Include="ConsoleCLI\FeedbackType.cs" />
     <Compile Include="ConsoleCLI\TestEnum.cs" />
+    <Compile Include="MapperFunction\CustomMapper.cs" />
+    <Compile Include="MapperFunction\IDecimalMapper.cs" />
+    <Compile Include="MapperFunction\LinearMapper.cs" />
+    <Compile Include="MapperFunction\LogarithmicMapper.cs" />
+    <Compile Include="MapperFunction\SqrtMapper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="AsciiArtZoom\c-sharpcorner.ods" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ZelluSim\ZelluSim.csproj">
@@ -64,5 +73,6 @@
       <Name>ZelluSim</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

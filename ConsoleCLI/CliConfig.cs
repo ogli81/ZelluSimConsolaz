@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using ZelluSim.Misc;
+using ZelluSimConsolaz.AsciiArtZoom;
+using ZelluSimConsolaz.MapperFunction;
 
 namespace ZelluSimConsolaz.ConsoleCLI
 {
@@ -26,9 +28,9 @@ namespace ZelluSimConsolaz.ConsoleCLI
         protected int topLeftX = 3;
         protected int topLeftY = 2;
 
-        protected string alifeText = "X";
-        protected string deadText = "-";
-        protected string halfAlifeText = "~"; //also cool: "+"
+        protected string alifeText = "><"; //best with 2 characters (to minimize vertical stretch)
+        protected string deadText = ".."; //best with 2 characters (to minimize vertical stretch)
+        protected string halfAlifeText = "~-"; //best with 2 characters (to minimize vertical stretch)
         protected ConsoleColor alifeColor = ConsoleColor.Green;
         protected ConsoleColor deadColor = ConsoleColor.Red;
         protected ConsoleColor halfAlifeColor = ConsoleColor.Yellow;
@@ -61,6 +63,9 @@ namespace ZelluSimConsolaz.ConsoleCLI
 
         protected TestEnum flagsEnum = TestEnum.FirstBlood | TestEnum.FifthElement;
 
+        protected NamedObjects<IDecimalMapper> mappers;
+        protected NamedObjects<IAsciiArtScale> scales;
+
         protected List<Item> items = new List<Item>();
 
 
@@ -73,6 +78,32 @@ namespace ZelluSimConsolaz.ConsoleCLI
         /// </summary>
         public CliConfig()
         {
+            //mappers
+            mappers = new NamedObjects<IDecimalMapper>(new string[] { "linear", "lin"}, new LinearMapper());
+            mappers.Register(new string[] { "logarithmic", "log" }, new LogarithmicMapper());
+            mappers.Register(new string[] { "sqrt", "root" }, new SqrtMapper());
+            mappers.Register(new string[] { "custom", "points" }, new CustomMapper(new decimal[] {  0m, 0.1m, 0.25m, 0.45m, 0.75m, 1m }));
+
+            //scales
+            ThresholdScale m1 = new ThresholdScale(
+                new byte[] { 230, 200, 180, 160, 130, 100, 70, 50 },
+                new char[] { ' ', '.', '*', ':', 'o', '&', '8', '#', '@' },
+                new Uri("https://www.codeproject.com/Articles/20435/Using-C-To-Generate-ASCII-Art-From-An-Image")
+            );
+            ThresholdScale m2 = new ThresholdScale(
+                new decimal[] { 0.90197m, 0.8m, 0.70197m, 0.6m, 0.50197m, 0.4m, 0.30197m, 0.2m, 0.10197m },
+                new char[] { ' ', '.', '-', ':', '*', '+', '=', '%', '@', '#' },
+                new Uri("https://www.c-sharpcorner.com/article/generating-ascii-art-from-an-image-using-C-Sharp/")
+            );
+            AutomaticScale m3 = new AutomaticScale(
+                "#@%=+*:-. ",
+                new Uri("https://www.c-sharpcorner.com/article/generating-ascii-art-from-an-image-using-C-Sharp/")
+            );
+            scales = new NamedObjects<IAsciiArtScale>(new string[] { "codeproject", "default", "standard" }, m1);
+            scales.Register(new string[] { "c-sharpcorner", "alternative" }, m2);
+            scales.Register(new string[] { "auto-example", "auto", "automatic" }, m3);
+
+            //items
             items.Add(new Item("TopLeftX", "top left corner, x-coordinate"));
             items.Add(new Item("TopLeftY", "top left corner, y-coordinate"));
             items.Add(new Item("AlifeText", "typically only 1 character like 'X'"));
@@ -97,7 +128,9 @@ namespace ZelluSimConsolaz.ConsoleCLI
             items.Add(new Item("PromptColor", "color of that prompt '> '"));
             items.Add(new Item("HelpColor", "color help text (with 'help' or '?')"));
             items.Add(new Item("BackColor", "general background color for console"));
-                items.Add(new Item("FlagsEnum", ""));
+                items.Add(new Item("FlagsEnum", "")); //maybe we should move this to a test package
+            //items.Add(new Item("Mappers", "mapper-functions (numbers more visible)"));
+            //items.Add(new Item("Scales", "number-to-ascii scales (for zoomed view)"));
         }
 
 
@@ -403,7 +436,6 @@ namespace ZelluSimConsolaz.ConsoleCLI
         }
 
         //TODO: background-color for everything
-
 
         public TestEnum FlagsEnum
         {

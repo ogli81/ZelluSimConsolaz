@@ -5,6 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using ZelluSim.Misc;
+using ZelluSimConsolaz.AsciiArtZoom;
+using ZelluSimConsolaz.MapperFunction;
 
 namespace ZelluSimConsolaz.ConsoleCLI
 {
@@ -250,6 +252,41 @@ namespace ZelluSimConsolaz.ConsoleCLI
                     if (input != null)
                         SetItem(theItem, (Enum)input, target);
                 }
+            }
+            else
+            if (type == typeof(NamedObjects<IDecimalMapper>))
+            {
+                //TODO
+                //idea: show a diagram with numbers
+                //out:                                       _-
+                //0.90-|                               __--''  |-0.90
+                //0.75-|               ______-----'''''        |-0.75
+                //0.50-|      __---''''                        |-0.50
+                //0.25-|   _-'                                 |-0.25
+                //0.10-|_-'                                    |-0.10
+                //in: 0<--------------------------------------->1
+                //should be around 33+0.66 characters high (101 values)
+                //should be around 66 characters wide (to get a square)
+                //+
+                //on the left side we show a typical drop-down-list
+                //this will influence the "current object"
+            }
+            else
+            if (type == typeof(NamedObjects<IAsciiArtScale>))
+            {
+                //TODO
+                //idea: list the characters and their scale-value
+                //for Auto-Scale we write "(auto)" instead of ">127"
+                //
+                //idea: render some bitmap (we must load it somehow)
+                //
+                //idea: user may press enter => render CharacterSeletor.MainLoop()
+                //      user may change threshold-numbers
+                //      new method 'Replace' in base class of 'NamedObjects'
+                //      since we want to change existing objects
+                //+
+                //on the left side we show a typical drop-down-list
+                //this will influence the "current object"
             }
             else
             {
